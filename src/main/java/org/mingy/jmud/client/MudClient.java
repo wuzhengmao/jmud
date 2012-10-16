@@ -1,45 +1,35 @@
 package org.mingy.jmud.client;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.SwingUtilities;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Sash;
+import org.eclipse.swt.widgets.ScrollBar;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 /**
  * MUD客户端实现。
@@ -53,13 +43,13 @@ public class MudClient implements TelnetClientListener {
 	private static final Log logger = LogFactory.getLog(MudClient.class);
 
 	/** 默认字体 */
-	private static final String DEFAULT_FONT_FAMILY = "宋体";
+	private static final String DEFAULT_FONT_FAMILY = "YaHei Consolas Hybrid";
 	/** 默认的字体大小 */
-	private static final int DEFAULT_FONT_SIZE = 16;
+	private static final int DEFAULT_FONT_SIZE = 10;
 	/** 命令行历史记录数 */
 	private static final int COMMAND_HISTORY_SIZE = 20;
-	/** TAB转换成空格 */
-	private static final byte[] TAB = "        ".getBytes();
+	/** TAB的长度 */
+	private static final int TABS = 8;
 
 	/** 主机名 */
 	private String hostname;
@@ -69,28 +59,22 @@ public class MudClient implements TelnetClientListener {
 	private int connectTimeout;
 	/** 字符集 */
 	private Charset charset;
-	/** 主显示区域（文本） */
-	private JTextPane textPane;
-	/** 主显示区域（滚动） */
-	private JScrollPane scrollPane;
+	/** 主显示区域 */
+	private StyledText mainStyledText;
+	/** 滚动时的辅助显示区域 */
+	private StyledText scrolledStyledText;
+	/** 分隔栏 */
+	private Sash sash;
 	/** 纵向滚动条 */
-	private JScrollBar scrollBar;
-	/** 滚动时的辅助显示区域（文本） */
-	private JTextPane textPane0;
-	/** 滚动时的辅助显示区域（滚动） */
-	private JScrollPane scrollPane0;
+	private ScrollBar scrollBar;
 	/** 命令行输入框 */
-	private JTextField commandInput;
-	/** 多样式的文档 */
-	private StyledDocument document;
+	private Text commandInput;
+	/** UI */
+	private Display display;
 	/** 默认的SGR */
 	private SGR defaultSGR;
 	/** 当前的SGR */
 	private SGR currentSGR;
-	/** 默认的样式 */
-	private Style defaultStyle;
-	/** 当前的样式 */
-	private Style currentStyle;
 	/** Telnet客户端 */
 	private TelnetClient client;
 	/** 命令行历史记录 */
@@ -113,32 +97,27 @@ public class MudClient implements TelnetClientListener {
 	 *            连接超时（毫秒）
 	 * @param charset
 	 *            字符集
-	 * @param textPane
-	 *            主显示区域（文本）
-	 * @param scrollPane
-	 *            主显示区域（滚动）
+	 * @param mainStyledText
+	 *            主显示区域
+	 * @param scrolledStyledText
+	 *            滚动时的辅助显示区域
+	 * @param sash
+	 *            分隔栏
 	 * @param scrollBar
 	 *            纵向滚动条
-	 * @param textPane0
-	 *            滚动时的辅助显示区域（文本）
-	 * @param scrollPane0
-	 *            滚动时的辅助显示区域（滚动）
-	 * @param commandInput
-	 *            命令行输入框
 	 */
 	public MudClient(String hostname, int port, int connectTimeout,
-			String charset, JTextPane textPane, JScrollPane scrollPane,
-			JScrollBar scrollBar, JTextPane textPane0, JScrollPane scrollPane0,
-			JTextField commandInput) {
+			String charset, StyledText mainStyledText,
+			StyledText scrolledStyledText, Sash sash, ScrollBar scrollBar,
+			Text commandInput) {
 		this.hostname = hostname;
 		this.port = port;
 		this.connectTimeout = connectTimeout;
 		this.charset = Charset.forName(charset);
-		this.textPane = textPane;
-		this.scrollPane = scrollPane;
+		this.mainStyledText = mainStyledText;
+		this.scrolledStyledText = scrolledStyledText;
+		this.sash = sash;
 		this.scrollBar = scrollBar;
-		this.textPane0 = textPane0;
-		this.scrollPane0 = scrollPane0;
 		this.commandInput = commandInput;
 		init();
 	}
@@ -164,8 +143,12 @@ public class MudClient implements TelnetClientListener {
 
 	public void onConnected() {
 		echoForbidden = false;
-		initSGR();
-		echo("Connected to " + hostname + ":" + port + "\n", SGR.INFO);
+		display.syncExec(new Runnable() {
+			public void run() {
+				initSGR();
+				echo("Connected to " + hostname + ":" + port + "\n", SGR.INFO);
+			}
+		});
 	}
 
 	public void onDisconnected() {
@@ -177,7 +160,7 @@ public class MudClient implements TelnetClientListener {
 			processLine(data);
 		} catch (Exception e) {
 			if (logger.isErrorEnabled()) {
-				logger.error(e);
+				logger.error("error on receive handler", e);
 			}
 		}
 	}
@@ -195,88 +178,75 @@ public class MudClient implements TelnetClientListener {
 	}
 
 	private void init() {
-		document = textPane.getStyledDocument();
+		display = mainStyledText.getDisplay();
+		mainStyledText.setEditable(false);
+		mainStyledText.setCaret(null);
+		mainStyledText.setTabs(TABS);
+		scrolledStyledText.setEditable(false);
+		scrolledStyledText.setCaret(null);
+		scrolledStyledText.setTabs(TABS);
+		scrollBar.setEnabled(false);
 		final ScrollListener scrollListener = new ScrollListener();
-		scrollPane.getParent().addComponentListener(new ComponentAdapter() {
+		mainStyledText.getParent().addControlListener(new ControlAdapter() {
 			@Override
-			public void componentResized(ComponentEvent event) {
-				if (scrollLocked) {
+			public void controlResized(ControlEvent e) {
+				if (scrollLocked)
 					unlockScroll();
-				}
-				scrollToEnd();
+				scrollToEnd(mainStyledText);
 			}
 		});
-		syncScroll(scrollPane);
-		scrollPane.getVerticalScrollBar().addAdjustmentListener(
-				new AdjustmentListener() {
-					public void adjustmentValueChanged(AdjustmentEvent event) {
-						if (!scrollLocked)
-							syncScroll(scrollPane);
-					}
-				});
-		textPane.addKeyListener(scrollListener);
-		textPane.addMouseWheelListener(scrollListener);
-		scrollPane0.getVerticalScrollBar().addAdjustmentListener(
-				new AdjustmentListener() {
-					public void adjustmentValueChanged(AdjustmentEvent event) {
-						if (scrollLocked)
-							syncScroll(scrollPane0);
-					}
-				});
-		textPane0.addKeyListener(scrollListener);
-		textPane0.addMouseWheelListener(scrollListener);
-		scrollBar.addAdjustmentListener(new AdjustmentListener() {
-			public void adjustmentValueChanged(AdjustmentEvent event) {
-				// lockScroll();
+		mainStyledText.addListener(SWT.KeyDown, scrollListener);
+		mainStyledText.addListener(SWT.MouseWheel, scrollListener);
+		mainStyledText.setKeyBinding(SWT.PAGE_UP, SWT.NULL);
+		scrolledStyledText.addListener(SWT.KeyDown, scrollListener);
+		scrolledStyledText.addListener(SWT.MouseWheel, scrollListener);
+		scrollBar.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
 			}
 		});
-		commandInput.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				String command = event.getActionCommand();
-				if (command != null
-						&& command.length() > 0
-						&& (commands.isEmpty() || !command.equals(commands
-								.getLast()))) {
-					commandInput.selectAll();
-					commands.addLast(command);
-					if (commands.size() > COMMAND_HISTORY_SIZE)
-						commands.removeFirst();
-					cmdptr = commands.size();
-				}
-				command += "\n";
-				echo(command, SGR.ECHO);
-				if (client != null && client.isAvailable()) {
-					client.write(command.getBytes(charset));
-				}
-			}
-		});
+		commandInput.addListener(SWT.KeyDown, scrollListener);
+		commandInput.addListener(SWT.MouseWheel, scrollListener);
 		commandInput.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
-				switch (event.getKeyCode()) {
-				case KeyEvent.VK_UP:
+				switch (event.keyCode) {
+				case SWT.CR:
+					String command = commandInput.getText();
+					if (command != null
+							&& command.length() > 0
+							&& (commands.isEmpty() || !command.equals(commands
+									.getLast()))) {
+						commandInput.selectAll();
+						commands.addLast(command);
+						if (commands.size() > COMMAND_HISTORY_SIZE)
+							commands.removeFirst();
+						cmdptr = commands.size();
+					}
+					command += "\n";
+					echo(command, SGR.ECHO);
+					if (client != null && client.isAvailable()) {
+						client.write(command.getBytes(charset));
+					}
+					break;
+				case SWT.ARROW_UP:
 					if (cmdptr > 0) {
 						cmdptr--;
 						commandInput.setText(commands.get(cmdptr));
 					} else {
 						cmdptr = -1;
-						commandInput.setText(null);
+						commandInput.setText("");
 					}
-					event.consume();
 					break;
-				case KeyEvent.VK_DOWN:
+				case SWT.ARROW_DOWN:
 					if (cmdptr < commands.size() - 1) {
 						cmdptr++;
 						commandInput.setText(commands.get(cmdptr));
 					} else {
 						cmdptr = commands.size();
-						commandInput.setText(null);
+						commandInput.setText("");
 					}
-					event.consume();
-					break;
-				case KeyEvent.VK_PAGE_UP:
-				case KeyEvent.VK_PAGE_DOWN:
-					scrollListener.keyPressed(event);
 					break;
 				}
 			}
@@ -287,192 +257,144 @@ public class MudClient implements TelnetClientListener {
 	/**
 	 * 监听并处理PageUp、PageDown和鼠标的滚卷事件。
 	 */
-	class ScrollListener extends KeyAdapter implements MouseWheelListener {
-
-		@Override
-		public void keyPressed(KeyEvent event) {
-			switch (event.getKeyCode()) {
-			case KeyEvent.VK_PAGE_UP:
-				scrollPageUp();
-				event.consume();
-				break;
-			case KeyEvent.VK_PAGE_DOWN:
-				scrollPageDown();
-				event.consume();
-				break;
-			}
-		}
-
-		public void mouseWheelMoved(MouseWheelEvent event) {
-			if (event.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {
-				int i = event.getUnitsToScroll();
-				if (i < 0)
-					scrollUp(-i);
-				else
-					scrollDown(i);
-				event.consume();
-			}
-		}
-	}
-
-	private void syncScroll(JScrollPane scrollPane) {
-		JScrollBar sb = scrollPane.getVerticalScrollBar();
-		scrollBar.setMinimum(sb.getMinimum());
-		scrollBar.setMaximum(sb.getMaximum());
-		scrollBar.setVisibleAmount(sb.getVisibleAmount());
-		scrollBar.setValue(sb.getValue());
-	}
-
-	private void lockScroll(final int units) {
-		if (scrollBar.getVisibleAmount() >= scrollBar.getMaximum())
-			return;
-		scrollLocked = true;
-		if (!scrollPane0.isVisible()) {
-			scrollPane0.setVisible(true);
-			scrollPane0.getParent().doLayout();
-			scrollPane0.doLayout();
-			scrollPane.doLayout();
-			syncScroll(scrollPane0);
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					int height = textPane.getHeight();
-					Rectangle rect = textPane0.getVisibleRect();
-					rect.y = height
-							- rect.height
-							- (units < 0 ? rect.height : units
-									* scrollPane0.getVerticalScrollBar()
-											.getUnitIncrement(-1));
-					if (rect.y < 0)
-						rect.y = 0;
-					textPane0.scrollRectToVisible(rect);
-					rect = textPane.getVisibleRect();
-					rect.y = height - rect.height;
-					if (rect.y < 0)
-						rect.y = 0;
-					textPane.scrollRectToVisible(rect);
+	class ScrollListener implements Listener {
+		public void handleEvent(Event event) {
+			switch (event.type) {
+			case SWT.KeyDown:
+				switch (event.keyCode) {
+				case SWT.PAGE_UP:
+					scrollUp(-1);
+					break;
+				case SWT.PAGE_DOWN:
+					scrollDown(-1);
+					break;
 				}
-			});
+				break;
+			case SWT.MouseWheel:
+				if (event.detail == SWT.SCROLL_LINE) {
+					if (event.count > 0)
+						scrollUp(event.count);
+					else
+						scrollDown(-event.count);
+				}
+				break;
+			}
+		}
+	}
+
+	private void syncScroll(StyledText styledText) {
+		int n = styledText.getLineCount();
+		int y = styledText.getTopIndex();
+		int h = styledText.getLineIndex(styledText.getClientArea().height) - y;
+		if (n > h) {
+			scrollBar.setValues(y, 0, n - 1, h, 1, h);
+			scrollBar.setEnabled(true);
+		} else {
+			scrollBar.setEnabled(false);
+		}
+	}
+
+	private void lockScroll() {
+		scrollLocked = true;
+		if (!scrolledStyledText.isVisible()) {
+			if (logger.isTraceEnabled()) {
+				logger.trace("lock scroll");
+			}
+			scrolledStyledText.setText(mainStyledText.getText());
+			scrolledStyledText.setStyleRanges(mainStyledText.getStyleRanges());
+			scrolledStyledText.setVisible(true);
+			sash.setVisible(true);
+			FormData layoutData = (FormData) mainStyledText.getLayoutData();
+			layoutData.top.control = sash;
+			mainStyledText.setLayoutData(layoutData);
+			mainStyledText.getParent().layout();
+			scrollToEnd(mainStyledText);
+			scrollToEnd(scrolledStyledText);
+			syncScroll(scrolledStyledText);
 		}
 	}
 
 	private void unlockScroll() {
 		scrollLocked = false;
-		if (scrollPane0.isVisible()) {
-			scrollPane0.setVisible(false);
-			scrollPane0.getParent().doLayout();
-			scrollPane.doLayout();
-			syncScroll(scrollPane);
-		}
-	}
-
-	private void scrollPageUp() {
-		if (logger.isTraceEnabled()) {
-			logger.trace("scroll page up");
-		}
-		if (!scrollLocked) {
-			lockScroll(-1);
-		} else {
-			Rectangle rect = textPane0.getVisibleRect();
-			if (rect.y > 0) {
-				rect.y -= rect.height;
-				if (rect.y < 0)
-					rect.y = 0;
-				textPane0.scrollRectToVisible(rect);
+		if (scrolledStyledText.isVisible()) {
+			if (logger.isTraceEnabled()) {
+				logger.trace("unlock scroll");
 			}
-		}
-	}
-
-	private void scrollPageDown() {
-		if (logger.isTraceEnabled()) {
-			logger.trace("scroll page down");
-		}
-		if (scrollLocked) {
-			Rectangle rect = textPane0.getVisibleRect();
-			rect.y += rect.height;
-			if (rect.y + rect.height < textPane0.getHeight()) {
-				textPane0.scrollRectToVisible(rect);
-			} else {
-				unlockScroll();
-			}
+			scrolledStyledText.setVisible(false);
+			sash.setVisible(false);
+			FormData layoutData = (FormData) mainStyledText.getLayoutData();
+			layoutData.top.control = null;
+			mainStyledText.setLayoutData(layoutData);
+			mainStyledText.getParent().layout();
+			scrollToEnd(mainStyledText);
+			syncScroll(mainStyledText);
 		}
 	}
 
 	private void scrollUp(int units) {
+		if (!scrollBar.isEnabled())
+			return;
 		if (logger.isTraceEnabled()) {
-			logger.trace("scroll up: " + units);
+			if (units < 0)
+				logger.trace("scroll page up");
+			else
+				logger.trace("scroll up: " + units);
 		}
-		if (!scrollLocked) {
-			lockScroll(units);
-		} else {
-			Rectangle rect = textPane0.getVisibleRect();
-			if (rect.y > 0) {
-				rect.y -= scrollPane0.getVerticalScrollBar().getUnitIncrement(
-						-1)
-						* units;
-				if (rect.y < 0)
-					rect.y = 0;
-				textPane0.scrollRectToVisible(rect);
-			}
+		if (!scrollLocked)
+			lockScroll();
+		int y = scrolledStyledText.getTopIndex();
+		int h = scrolledStyledText.getLineIndex(scrolledStyledText
+				.getClientArea().height) - y;
+		y -= units < 0 ? h : units;
+		if (y < 0)
+			y = 0;
+		if (logger.isTraceEnabled()) {
+			logger.trace("scroll to line: " + y);
 		}
+		scrolledStyledText.setTopIndex(y);
+		scrollBar.setSelection(y);
 	}
 
 	private void scrollDown(int units) {
+		if (!scrollBar.isEnabled())
+			return;
 		if (logger.isTraceEnabled()) {
-			logger.trace("scroll down: " + units);
+			if (units < 0)
+				logger.trace("scroll page down");
+			else
+				logger.trace("scroll down: " + units);
 		}
 		if (scrollLocked) {
-			Rectangle rect = textPane0.getVisibleRect();
-			rect.y += scrollPane0.getVerticalScrollBar().getUnitIncrement(1)
-					* units;
-			if (rect.y + rect.height < textPane0.getHeight()) {
-				textPane0.scrollRectToVisible(rect);
+			int n = scrolledStyledText.getLineCount();
+			int y = scrolledStyledText.getTopIndex();
+			int h = scrolledStyledText.getLineIndex(scrolledStyledText
+					.getClientArea().height) - y;
+			y += units < 0 ? h : units;
+			if (y + h < n) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("scroll to line: " + y);
+				}
+				scrolledStyledText.setTopIndex(y);
+				scrollBar.setSelection(y);
 			} else {
 				unlockScroll();
 			}
 		}
 	}
 
-	private void scrollToEnd() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				Rectangle rect = textPane.getVisibleRect();
-				rect.y = textPane.getHeight() - rect.height;
-				if (rect.y < 0)
-					rect.y = 0;
-				textPane.scrollRectToVisible(rect);
-			}
-		});
+	private void scrollToEnd(StyledText styledText) {
+		int n = styledText.getLineCount();
+		if (n > 0)
+			styledText.setTopIndex(n - 1);
 	}
 
 	private void initSGR() {
-		defaultSGR = new SGR(SGR.DEFAULT);
-		defaultStyle = document.addStyle(defaultSGR.getStyle(),
-				document.getStyle("default"));
-		StyleConstants.setBold(defaultStyle, defaultSGR.isBlink()); // 粗体
-		StyleConstants.setItalic(defaultStyle, defaultSGR.isItalic()); // 斜体
-		StyleConstants.setUnderline(defaultStyle, defaultSGR.isUnderline()); // 下划线
-		StyleConstants.setBackground(defaultStyle,
-				defaultSGR.getBackgroundColor()); // 背景色
-		StyleConstants.setForeground(defaultStyle, defaultSGR.getTextColor()); // 颜色
-		textPane.setBackground(defaultSGR.getBackgroundColor());
-		textPane0.setBackground(defaultSGR.getBackgroundColor());
-		currentSGR = defaultSGR;
-		currentStyle = defaultStyle;
-	}
-
-	private void changeSGR(String style) {
-		currentSGR = new SGR(style, currentSGR);
-		currentStyle = document.getStyle(style);
-		if (currentStyle == null) {
-			currentStyle = document.addStyle(style, defaultStyle);
-			StyleConstants.setBold(currentStyle, currentSGR.isBlink()); // 粗体
-			StyleConstants.setItalic(currentStyle, currentSGR.isItalic()); // 斜体
-			StyleConstants.setUnderline(currentStyle, currentSGR.isUnderline()); // 下划线
-			StyleConstants.setBackground(currentStyle,
-					currentSGR.getBackgroundColor()); // 背景色
-			StyleConstants.setForeground(currentStyle,
-					currentSGR.getTextColor()); // 颜色
-		}
+		currentSGR = defaultSGR = new SGR(SGR.DEFAULT);
+		int[] rgb = defaultSGR.getBackgroundColor();
+		mainStyledText
+				.setBackground(new Color(display, rgb[0], rgb[1], rgb[2]));
+		scrolledStyledText.setBackground(new Color(display, rgb[0], rgb[1],
+				rgb[2]));
 	}
 
 	private void processLine(byte[] bytes) throws Exception {
@@ -486,7 +408,7 @@ public class MudClient implements TelnetClientListener {
 			int e = matchEscEnd(bytes, p);
 			if (e > p) {
 				String s = new String(bytes, p, e - p + 1);
-				changeSGR(s);
+				currentSGR = new SGR(s, currentSGR);
 				p = e + 1;
 				i = p;
 			} else {
@@ -499,64 +421,43 @@ public class MudClient implements TelnetClientListener {
 	}
 
 	private void appendLine(byte[] bytes, int start, int length) {
-		String line;
-		List<Integer> list = new ArrayList<Integer>(8);
-		for (int i = start; i < length; i++) {
-			if (bytes[i] == 9)
-				list.add(i);
-		}
-		if (!list.isEmpty()) {
-			byte[] tmp = new byte[length + list.size() * 7];
-			int n = start, p = 0, l = 0;
-			for (int i : list) {
-				l = i - n;
-				if (l > 0)
-					System.arraycopy(bytes, n, tmp, p, l);
-				n += i + 1;
-				p += l;
-				int k = 8 - (p & 7);
-				System.arraycopy(TAB, 0, tmp, p, k);
-				p += k;
-			}
-			l = start + length - n;
-			if (l > 0) {
-				System.arraycopy(bytes, n, tmp, p, l);
-				p += l;
-			}
-			line = new String(tmp, 0, p, charset);
-		} else {
-			line = new String(bytes, start, length, charset);
-		}
 		if (!echoForbidden) {
-			try {
-				if (logger.isTraceEnabled()) {
-					logger.trace(currentStyle);
-					logger.trace(line);
+			final String line = new String(bytes, start, length, charset);
+			display.syncExec(new Runnable() {
+				public void run() {
+					echo(line, null);
 				}
-				document.insertString(document.getLength(), line, currentStyle);
-			} catch (BadLocationException e) {
-				if (logger.isErrorEnabled()) {
-					logger.error(e);
-				}
-			}
-			scrollToEnd();
+			});
 		}
 	}
 
-	private void echo(String message, String sgrString) {
-		SGR sgr = currentSGR;
-		Style style = currentStyle;
-		changeSGR(sgrString);
-		try {
-			document.insertString(document.getLength(), message, currentStyle);
-		} catch (BadLocationException e) {
-			if (logger.isErrorEnabled()) {
-				logger.error(e);
-			}
+	private void echo(final String message, String sgrString) {
+		SGR sgr = sgrString != null ? new SGR(sgrString, defaultSGR)
+				: currentSGR;
+		int[] textColor = sgr.getTextColor();
+		int[] bgColor = sgr.getBackgroundColor();
+		final StyleRange style = new StyleRange(mainStyledText.getCharCount(),
+				message.length(), new Color(display, textColor[0],
+						textColor[1], textColor[2]), new Color(display,
+						bgColor[0], bgColor[1], bgColor[2]));
+		if (sgr.isBlink())
+			style.fontStyle |= SWT.BOLD;
+		if (sgr.isItalic())
+			style.fontStyle |= SWT.ITALIC;
+		if (sgr.isUnderline())
+			style.underline = true;
+		if (logger.isTraceEnabled()) {
+			logger.trace(style);
+			logger.trace(message);
 		}
-		currentSGR = sgr;
-		currentStyle = style;
-		scrollToEnd();
+		mainStyledText.append(message);
+		mainStyledText.setStyleRange(style);
+		scrollToEnd(mainStyledText);
+		if (scrollLocked) {
+			scrolledStyledText.append(message);
+			scrolledStyledText.setStyleRange(style);
+		}
+		syncScroll(scrollLocked ? scrolledStyledText : mainStyledText);
 	}
 
 	private static int matchEscStart(byte[] bytes, int start) {
@@ -583,71 +484,76 @@ public class MudClient implements TelnetClientListener {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		JFrame frame = new JFrame();
-		StyledDocument doc = new DefaultStyledDocument();
-		JTextPane textPane = new JTextPane(doc);
-		textPane.setEditable(false);
-		JScrollPane scrollPane = new JScrollPane(textPane,
-				JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		JTextField commandInput = new JTextField();
-		JScrollBar scrollBar = new JScrollBar();
-		JTextPane textPane0 = new JTextPane(doc);
-		textPane0.setEditable(false);
-		final JScrollPane scrollPane0 = new JScrollPane(textPane0,
-				JScrollPane.VERTICAL_SCROLLBAR_NEVER,
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		final JPanel panel = new JPanel();
-		panel.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
-		c.gridx = 0;
-		c.gridy = 0;
-		c.weightx = 1;
-		c.weighty = 2;
-		panel.add(scrollPane0, c);
-		c.gridy = 1;
-		c.weighty = 1;
-		panel.add(scrollPane, c);
-		Style style = doc.addStyle("default", null);
-		StyleConstants.setFontFamily(style, DEFAULT_FONT_FAMILY); // 字体
-		StyleConstants.setFontSize(style, DEFAULT_FONT_SIZE); // 大小
-		commandInput.setFont(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN,
-				DEFAULT_FONT_SIZE));
-		frame.getContentPane().setLayout(new BorderLayout());
-		frame.getContentPane().add(panel, BorderLayout.CENTER);
-		frame.getContentPane().add(scrollBar, BorderLayout.EAST);
-		frame.getContentPane().add(commandInput, BorderLayout.SOUTH);
-		frame.pack();
-		commandInput.requestFocusInWindow();
-		frame.setSize(new Dimension(800, 600));
-		frame.setTitle("Mud Client");
-		frame.setLocation(new Point(200, 200));
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		final MudClient mc = new MudClient("pkuxkx.net", 5555, 10000, "GBK",
-				textPane, scrollPane, scrollBar, textPane0, scrollPane0,
-				commandInput);
-		frame.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowOpened(WindowEvent event) {
-				try {
-					scrollPane0.setVisible(false);
-					panel.doLayout();
-					mc.connect();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-
-			@Override
-			public void windowClosing(WindowEvent event) {
-				try {
-					mc.close();
-				} catch (Exception e) {
-					e.printStackTrace();
+		Display display = new Display();
+		Shell shell = new Shell(display);
+		shell.setLayout(new FormLayout());
+		final Composite composite = new Composite(shell, SWT.V_SCROLL);
+		StyledText mainStyledText = new StyledText(composite, SWT.BORDER);
+		StyledText scrolledStyledText = new StyledText(composite, SWT.BORDER);
+		FontData fontData = new FontData(DEFAULT_FONT_FAMILY,
+				DEFAULT_FONT_SIZE, SWT.NORMAL);
+		fontData.setLocale("zh_CN");
+		Font font = new Font(display, fontData);
+		mainStyledText.setFont(font);
+		scrolledStyledText.setFont(font);
+		final Sash sash = new Sash(composite, SWT.HORIZONTAL);
+		composite.setLayout(new FormLayout());
+		FormData text1Data = new FormData();
+		text1Data.top = new FormAttachment(0, 0);
+		text1Data.bottom = new FormAttachment(sash, 0);
+		text1Data.left = new FormAttachment(0, 0);
+		text1Data.right = new FormAttachment(100, 0);
+		scrolledStyledText.setLayoutData(text1Data);
+		scrolledStyledText.setVisible(false);
+		final int limit = mainStyledText.getLineHeight(), percent = 66;
+		final FormData sashData = new FormData();
+		sashData.top = new FormAttachment(percent, 0);
+		sashData.left = new FormAttachment(0, 0);
+		sashData.right = new FormAttachment(100, 0);
+		sash.setLayoutData(sashData);
+		sash.setVisible(false);
+		sash.addListener(SWT.Selection, new Listener() {
+			public void handleEvent(Event e) {
+				Rectangle sashRect = sash.getBounds();
+				Rectangle shellRect = composite.getClientArea();
+				int bottom = shellRect.height - sashRect.height - limit;
+				e.y = Math.max(Math.min(e.y, bottom), limit);
+				if (e.y != sashRect.y) {
+					sashData.top = new FormAttachment(0, e.y);
+					composite.layout();
 				}
 			}
 		});
-		frame.setVisible(true);
+		FormData text2Data = new FormData();
+		text2Data.top = new FormAttachment(0, 0);
+		text2Data.bottom = new FormAttachment(100, 0);
+		text2Data.left = new FormAttachment(0, 0);
+		text2Data.right = new FormAttachment(100, 0);
+		mainStyledText.setLayoutData(text2Data);
+		Text commandInput = new Text(shell, SWT.BORDER | SWT.SINGLE);
+		FormData compositeData = new FormData();
+		compositeData.top = new FormAttachment(0, 0);
+		compositeData.bottom = new FormAttachment(commandInput, 0);
+		compositeData.left = new FormAttachment(0, 0);
+		compositeData.right = new FormAttachment(100, 0);
+		composite.setLayoutData(compositeData);
+		FormData inputData = new FormData();
+		inputData.bottom = new FormAttachment(100, 0);
+		inputData.left = new FormAttachment(0, 0);
+		inputData.right = new FormAttachment(100, 0);
+		commandInput.setLayoutData(inputData);
+		shell.setSize(800, 600);
+		shell.open();
+		commandInput.forceFocus();
+		final MudClient mc = new MudClient("pkuxkx.net", 5555, 10000, "GBK",
+				mainStyledText, scrolledStyledText, sash,
+				composite.getVerticalBar(), commandInput);
+		mc.connect();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch())
+				display.sleep();
+		}
+		mc.close();
+		display.dispose();
 	}
 }

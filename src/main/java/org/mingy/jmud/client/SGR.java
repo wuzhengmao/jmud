@@ -1,6 +1,5 @@
 package org.mingy.jmud.client;
 
-import java.awt.Color;
 
 /**
  * <a href="http://en.wikipedia.org/wiki/ANSI_escape_code#Colors">Select Graphic
@@ -24,15 +23,15 @@ public class SGR {
 	private static int DEFAULT_BACKGROUND_COLOR_INDEX = 0;
 	private static int DEFAULT_TEXT_COLOR_INDEX = 2;
 
-	private static Color[][] colorTable = new Color[][] {
-			new Color[] { new Color(0, 0, 0), new Color(128, 0, 0),
-					new Color(0, 128, 0), new Color(128, 128, 0),
-					new Color(0, 0, 128), new Color(128, 0, 128),
-					new Color(0, 128, 128), new Color(192, 192, 192) },
-			new Color[] { new Color(128, 128, 128), new Color(255, 0, 0),
-					new Color(0, 255, 0), new Color(255, 255, 0),
-					new Color(0, 0, 255), new Color(255, 0, 255),
-					new Color(0, 255, 255), new Color(255, 255, 255) } };
+	private static int[][][] colorTable = new int[][][] {
+			new int[][] { new int[] { 0, 0, 0 }, new int[] { 128, 0, 0 },
+					new int[] { 0, 128, 0 }, new int[] { 128, 128, 0 },
+					new int[] { 0, 0, 128 }, new int[] { 128, 0, 128 },
+					new int[] { 0, 128, 128 }, new int[] { 192, 192, 192 } },
+			new int[][] { new int[] { 128, 128, 128 }, new int[] { 255, 0, 0 },
+					new int[] { 0, 255, 0 }, new int[] { 255, 255, 0 },
+					new int[] { 0, 0, 255 }, new int[] { 255, 0, 255 },
+					new int[] { 0, 255, 255 }, new int[] { 255, 255, 255 } } };
 
 	private String style;
 	private boolean bright;
@@ -160,21 +159,21 @@ public class SGR {
 	}
 
 	/**
-	 * 返回背景色。
+	 * 返回背景色（RGB）。
 	 * 
 	 * @return 背景色
 	 */
-	public Color getBackgroundColor() {
+	public int[] getBackgroundColor() {
 		int i = isReverse() ? textColorIndex : backgroundColorIndex;
 		return colorTable[0][i];
 	}
 
 	/**
-	 * 返回文字颜色。
+	 * 返回文字颜色（RGB）。
 	 * 
 	 * @return 文字颜色
 	 */
-	public Color getTextColor() {
+	public int[] getTextColor() {
 		int i = isReverse() ? backgroundColorIndex : textColorIndex;
 		int n = isBright() ? 1 : 0;
 		return colorTable[n][i];
