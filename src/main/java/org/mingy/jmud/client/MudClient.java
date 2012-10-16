@@ -19,6 +19,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -28,6 +29,8 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.mingy.jmud.model.Configurations;
+import org.mingy.jmud.model.ShortKey;
 
 /**
  * MUD客户端实现。
@@ -48,6 +51,8 @@ public class MudClient implements TelnetClientListener {
 	private static final String DEFAULT_LOCALE = "zh_CN";
 	/** 默认的字符集 */
 	private static final String DEFAULT_CHARSET = "GBK";
+	/** 富文本内容的最大行数 */
+	private static final int CONTENT_MAX_LINES = 1000;
 	/** 命令行历史记录数 */
 	private static final int COMMAND_HISTORY_SIZE = 20;
 	/** TAB的长度 */
@@ -65,6 +70,8 @@ public class MudClient implements TelnetClientListener {
 	private StyledText styledText;
 	/** 命令行输入框 */
 	private Text commandInput;
+	/** 配置定义 */
+	private Configurations configurations;
 	/** UI */
 	private Display display;
 	/** 富文本内容 */
@@ -86,6 +93,13 @@ public class MudClient implements TelnetClientListener {
 	/** true时禁止显示接收到的数据 */
 	private boolean echoForbidden;
 
+	/** 是否为MAC操作系统 */
+	private static final boolean IS_MAC;
+	static {
+		String platform = SWT.getPlatform();
+		IS_MAC = "carbon".equals(platform) || "cocoa".equals(platform);
+	}
+
 	/**
 	 * 构造器。
 	 * 
@@ -103,13 +117,15 @@ public class MudClient implements TelnetClientListener {
 	 *            命令行输入框
 	 */
 	public MudClient(String hostname, int port, int connectTimeout,
-			String charset, StyledText styledText, Text commandInput) {
+			String charset, StyledText styledText, Text commandInput,
+			Configurations configurations) {
 		this.hostname = hostname;
 		this.port = port;
 		this.connectTimeout = connectTimeout;
 		this.charset = Charset.forName(charset);
 		this.styledText = styledText;
 		this.commandInput = commandInput;
+		this.configurations = configurations;
 		init();
 	}
 
@@ -172,6 +188,7 @@ public class MudClient implements TelnetClientListener {
 		display = styledText.getDisplay();
 		content = styledText.getContent();
 		styledText.setEditable(false);
+		styledText.setWordWrap(true);
 		styledText.setCaret(null);
 		styledText.setTabs(TABS);
 		styledText.addControlListener(new ControlAdapter() {
@@ -202,27 +219,14 @@ public class MudClient implements TelnetClientListener {
 		styledText.addListener(SWT.MouseWheel, scrollListener);
 		commandInput.addListener(SWT.KeyDown, scrollListener);
 		commandInput.addListener(SWT.MouseWheel, scrollListener);
+		commandInput.addListener(SWT.KeyDown, new ShortKeyListener());
 		commandInput.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent event) {
 				switch (event.keyCode) {
 				case SWT.CR:
-					String command = commandInput.getText();
-					if (command != null
-							&& command.length() > 0
-							&& (commands.isEmpty() || !command.equals(commands
-									.getLast()))) {
-						commandInput.selectAll();
-						commands.addLast(command);
-						if (commands.size() > COMMAND_HISTORY_SIZE)
-							commands.removeFirst();
-						cmdptr = commands.size();
-					}
-					command += "\n";
-					echo(command, SGR.ECHO);
-					if (client != null && client.isAvailable()) {
-						client.write(command.getBytes(charset));
-					}
+					doCommand();
+					event.doit = false;
 					break;
 				case SWT.ARROW_UP:
 					if (cmdptr > 0) {
@@ -232,6 +236,7 @@ public class MudClient implements TelnetClientListener {
 						cmdptr = -1;
 						commandInput.setText("");
 					}
+					event.doit = false;
 					break;
 				case SWT.ARROW_DOWN:
 					if (cmdptr < commands.size() - 1) {
@@ -241,6 +246,7 @@ public class MudClient implements TelnetClientListener {
 						cmdptr = commands.size();
 						commandInput.setText("");
 					}
+					event.doit = false;
 					break;
 				}
 			}
@@ -255,12 +261,29 @@ public class MudClient implements TelnetClientListener {
 		public void handleEvent(Event event) {
 			switch (event.type) {
 			case SWT.KeyDown:
+				int state = event.stateMask & SWT.MODIFIER_MASK;
 				switch (event.keyCode) {
 				case SWT.PAGE_UP:
 					scrollUp(-1);
+					event.doit = false;
 					break;
 				case SWT.PAGE_DOWN:
 					scrollDown(-1);
+					event.doit = false;
+					break;
+				case SWT.HOME:
+					if ((IS_MAC && state == SWT.NONE)
+							|| (!IS_MAC && state == SWT.CTRL)) {
+						scrollToTop();
+						event.doit = false;
+					}
+					break;
+				case SWT.END:
+					if ((IS_MAC && state == SWT.NONE)
+							|| (!IS_MAC && state == SWT.CTRL)) {
+						scrollToEnd();
+						event.doit = false;
+					}
 					break;
 				}
 				break;
@@ -270,6 +293,7 @@ public class MudClient implements TelnetClientListener {
 						scrollUp(event.count);
 					else
 						scrollDown(-event.count);
+					event.doit = false;
 				}
 				break;
 			}
@@ -279,18 +303,17 @@ public class MudClient implements TelnetClientListener {
 	private void scrollUp(int units) {
 		if (!canScroll)
 			return;
-		if (logger.isTraceEnabled()) {
-			if (units < 0)
-				logger.trace("scroll page up");
-			else
-				logger.trace("scroll up: " + units);
-		}
 		scrolling = true;
+		Rectangle rect = styledText.getClientArea();
+		int bottom = styledText.getLinePixel(styledText.getLineIndex(styledText.getClientArea().height-1)+1);
+		int h = rect.height / styledText.getLineHeight();
 		int y = styledText.getTopIndex();
-		int h = styledText.getLineIndex(styledText.getClientArea().height) - y;
 		y -= units < 0 ? h : units;
 		if (y < 0)
 			y = 0;
+		while (bottom - styledText.getLinePixel(y) > rect.height) {
+			y++;
+		}
 		if (logger.isTraceEnabled()) {
 			logger.trace("scroll to line: " + y);
 		}
@@ -300,35 +323,38 @@ public class MudClient implements TelnetClientListener {
 	private void scrollDown(int units) {
 		if (!scrolling)
 			return;
-		if (logger.isTraceEnabled()) {
-			if (units < 0)
-				logger.trace("scroll page down");
-			else
-				logger.trace("scroll down: " + units);
-		}
+		Rectangle rect = styledText.getClientArea();
 		int n = styledText.getLineCount();
 		int y = styledText.getTopIndex();
-		int h = styledText.getLineIndex(styledText.getClientArea().height) - y;
-		if (y + h < n) {
-			y += units < 0 ? h : units;
-			if (y + h >= n) {
-				y = n - h;
-				scrolling = false;
-			}
-			if (logger.isTraceEnabled()) {
-				logger.trace("scroll to line: " + y);
-			}
-			styledText.setTopIndex(y);
+		int top = styledText.getLinePixel(y);
+		top += units < 0 ? rect.height : (units * styledText.getLineHeight());
+		if (top + rect.height <= styledText.getLinePixel(n)) {
+			// TODO:
 		} else {
-			scrolling = false;
+			scrollToEnd();
 		}
 	}
 
+	private void scrollToTop() {
+		if (!canScroll)
+			return;
+		scrolling = true;
+		if (logger.isTraceEnabled()) {
+			logger.trace("scroll to line: " + 0);
+		}
+		styledText.setTopIndex(0);
+	}
+
 	private void scrollToEnd() {
+		scrolling = false;
+		Rectangle rect = styledText.getClientArea();
 		int n = styledText.getLineCount();
-		int y = styledText.getTopIndex();
-		int h = styledText.getLineIndex(styledText.getClientArea().height) - y;
-		y = n - h;
+		int bottom = styledText.getLinePixel(n);
+		int h = rect.height / styledText.getLineHeight();
+		int y = n - h;
+		while (bottom - styledText.getLinePixel(y) > rect.height) {
+			y++;
+		}
 		if (logger.isTraceEnabled()) {
 			logger.trace("scroll to line: " + y);
 		}
@@ -375,7 +401,7 @@ public class MudClient implements TelnetClientListener {
 		}
 	}
 
-	private void echo(final String message, String sgrString) {
+	private void echo(String message, String sgrString) {
 		SGR sgr = sgrString != null ? new SGR(sgrString, defaultSGR)
 				: currentSGR;
 		int[] textColor = sgr.getTextColor();
@@ -396,6 +422,10 @@ public class MudClient implements TelnetClientListener {
 		}
 		styledText.append(message);
 		styledText.setStyleRange(style);
+		int n = styledText.getLineCount() - CONTENT_MAX_LINES;
+		if (n > 0) {
+			styledText.replaceTextRange(0, styledText.getOffsetAtLine(n), "");
+		}
 		if (logger.isTraceEnabled()) {
 			logger.trace("lines: " + content.getLineCount());
 		}
@@ -422,6 +452,49 @@ public class MudClient implements TelnetClientListener {
 				return i;
 		}
 		return -1;
+	}
+
+	/**
+	 * 监听快捷键。
+	 */
+	class ShortKeyListener implements Listener {
+		public void handleEvent(Event event) {
+			switch (event.type) {
+			case SWT.KeyDown:
+				int key = event.keyCode | event.stateMask;
+				ShortKey shortKey = configurations.SHORT_KEYS.get(key);
+				if (shortKey != null) {
+					if (logger.isTraceEnabled()) {
+						logger.trace("short key command: "
+								+ shortKey.getCommand());
+					}
+					doCommand();
+					event.doit = false;
+				}
+				break;
+			}
+		}
+	}
+
+	private void doCommand() {
+		String command = commandInput.getText();
+		if (command != null && command.length() > 0
+				&& (commands.isEmpty() || !command.equals(commands.getLast()))) {
+			commandInput.selectAll();
+			commands.addLast(command);
+			if (commands.size() > COMMAND_HISTORY_SIZE)
+				commands.removeFirst();
+			cmdptr = commands.size();
+		}
+		command += "\n";
+		doCommand(command);
+	}
+
+	private void doCommand(String command) {
+		echo(command, SGR.ECHO);
+		if (client != null && client.isAvailable()) {
+			client.write(command.getBytes(charset));
+		}
 	}
 
 	/**
@@ -456,8 +529,9 @@ public class MudClient implements TelnetClientListener {
 		commandInput.setLayoutData(inputData);
 		shell.setSize(800, 600);
 		shell.open();
-		final MudClient mc = new MudClient("pkuxkx.net", 5555, 10000,
-				DEFAULT_CHARSET, styledText, commandInput);
+		MudClient mc = new MudClient("pkuxkx.net", 5555, 10000,
+				DEFAULT_CHARSET, styledText, commandInput,
+				new org.mingy.jmud.model.pkuxkx.Configurations());
 		mc.connect();
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch())
