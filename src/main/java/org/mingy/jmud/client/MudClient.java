@@ -305,19 +305,20 @@ public class MudClient implements TelnetClientListener {
 			return;
 		scrolling = true;
 		Rectangle rect = styledText.getClientArea();
-		int bottom = styledText.getLinePixel(styledText.getLineIndex(styledText.getClientArea().height-1)+1);
-		int h = rect.height / styledText.getLineHeight();
 		int y = styledText.getTopIndex();
-		y -= units < 0 ? h : units;
-		if (y < 0)
-			y = 0;
-		while (bottom - styledText.getLinePixel(y) > rect.height) {
-			y++;
+		int top = styledText.getLinePixel(y);
+		top -= units < 0 ? rect.height : (units * styledText.getLineHeight());
+		if (top > styledText.getLinePixel(0)) {
+			y = styledText.getLineIndex(top);
+			if (top > styledText.getLinePixel(y))
+				y++;
+			if (logger.isTraceEnabled()) {
+				logger.trace("scroll to line: " + y);
+			}
+			styledText.setTopIndex(y);
+		} else {
+			scrollToTop();
 		}
-		if (logger.isTraceEnabled()) {
-			logger.trace("scroll to line: " + y);
-		}
-		styledText.setTopIndex(y);
 	}
 
 	private void scrollDown(int units) {
@@ -328,8 +329,12 @@ public class MudClient implements TelnetClientListener {
 		int y = styledText.getTopIndex();
 		int top = styledText.getLinePixel(y);
 		top += units < 0 ? rect.height : (units * styledText.getLineHeight());
-		if (top + rect.height <= styledText.getLinePixel(n)) {
-			// TODO:
+		if (top + rect.height < styledText.getLinePixel(n)) {
+			y = styledText.getLineIndex(top);
+			if (logger.isTraceEnabled()) {
+				logger.trace("scroll to line: " + y);
+			}
+			styledText.setTopIndex(y);
 		} else {
 			scrollToEnd();
 		}
@@ -350,11 +355,10 @@ public class MudClient implements TelnetClientListener {
 		Rectangle rect = styledText.getClientArea();
 		int n = styledText.getLineCount();
 		int bottom = styledText.getLinePixel(n);
-		int h = rect.height / styledText.getLineHeight();
-		int y = n - h;
-		while (bottom - styledText.getLinePixel(y) > rect.height) {
+		int top = bottom - rect.height;
+		int y = styledText.getLineIndex(top);
+		if (top > styledText.getLinePixel(y))
 			y++;
-		}
 		if (logger.isTraceEnabled()) {
 			logger.trace("scroll to line: " + y);
 		}
@@ -378,7 +382,16 @@ public class MudClient implements TelnetClientListener {
 			int e = matchEscEnd(bytes, p);
 			if (e > p) {
 				String s = new String(bytes, p, e - p + 1);
-				currentSGR = new SGR(s, currentSGR);
+				if (bytes[p + 1] == '[' && bytes[e] == 'm') {
+					if (logger.isDebugEnabled()) {
+						logger.debug("SGR: <ESC>" + s.substring(1));
+					}
+					currentSGR = new SGR(s, currentSGR);
+				} else {
+					if (logger.isDebugEnabled()) {
+						logger.debug("ignore CSI: <ESC>" + s.substring(1));
+					}
+				}
 				p = e + 1;
 				i = p;
 			} else {
@@ -417,7 +430,6 @@ public class MudClient implements TelnetClientListener {
 		if (sgr.isUnderline())
 			style.underline = true;
 		if (logger.isTraceEnabled()) {
-			logger.trace(style);
 			logger.trace(message);
 		}
 		styledText.append(message);
@@ -447,11 +459,17 @@ public class MudClient implements TelnetClientListener {
 	}
 
 	private static int matchEscEnd(byte[] bytes, int start) {
-		for (int i = start; i < bytes.length; i++) {
-			if (bytes[i] == 109)
-				return i;
+		if (bytes.length <= start + 1)
+			return -1;
+		if (bytes[start + 1] == '[') {
+			for (int i = start + 2; i < bytes.length; i++) {
+				if (bytes[i] >= 64 && bytes[i] <= 126)
+					return i;
+			}
+			return -1;
+		} else {
+			return start + 1;
 		}
-		return -1;
 	}
 
 	/**
@@ -468,6 +486,7 @@ public class MudClient implements TelnetClientListener {
 						logger.trace("short key command: "
 								+ shortKey.getCommand());
 					}
+					commandInput.setText(shortKey.getCommand());
 					doCommand();
 					event.doit = false;
 				}

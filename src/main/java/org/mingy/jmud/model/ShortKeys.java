@@ -25,6 +25,7 @@ public class ShortKeys {
 		add(SWT.KEYPAD_2, "south", DEFAULT);
 		add(SWT.KEYPAD_3, "southeast", DEFAULT);
 		add(SWT.KEYPAD_4, "west", DEFAULT);
+		add(SWT.KEYPAD_5, "look", DEFAULT);
 		add(SWT.KEYPAD_6, "east", DEFAULT);
 		add(SWT.KEYPAD_7, "northwest", DEFAULT);
 		add(SWT.KEYPAD_8, "north", DEFAULT);

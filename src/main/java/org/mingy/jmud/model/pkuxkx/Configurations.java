@@ -16,6 +16,5 @@ public class Configurations extends org.mingy.jmud.model.Configurations {
 	public Configurations() {
 		super();
 		SHORT_KEYS.add(SWT.KEYPAD_0, "hp");
-		SHORT_KEYS.add(SWT.KEYPAD_5, "look");
 	}
 }

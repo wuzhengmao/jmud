@@ -270,7 +270,7 @@ public class TelnetClient {
 					if (b == 91) {
 						while (true) {
 							b = buffer.readByte() & 0xff;
-							if (b == 109 || b == 103 || b == 110)
+							if (b >= 64 && b <= 126)
 								break;
 						}
 					}
