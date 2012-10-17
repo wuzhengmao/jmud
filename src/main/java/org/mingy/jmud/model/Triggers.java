@@ -7,28 +7,27 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mingy.jmud.client.IMudClient;
 
 /**
- * 触发器处理程序。
+ * 触发器的定义和处理。
  * 
  * @author Mingy
  * @since 1.0.0
  */
-public class TriggerHandler {
+public class Triggers {
 
 	/** 日志 */
-	private static final Log logger = LogFactory.getLog(TriggerHandler.class);
+	private static final Log logger = LogFactory.getLog(Trigger.class);
 
 	/** 最大保留的行数 */
 	private static final int MAX_LINES = 10;
 
-	/** MUD客户端 */
-	private IMudClient client;
+	/** 上下文 */
+	private Context context;
 	/** 最后行 */
 	private Line last;
 	/** 所有触发器 */
-	private Map<Integer, ITrigger> triggers;
+	private Map<Integer, Trigger> triggers;
 
 	/**
 	 * 构造器。
@@ -36,9 +35,9 @@ public class TriggerHandler {
 	 * @param client
 	 *            MUD客户端
 	 */
-	public TriggerHandler(IMudClient client) {
-		this.client = client;
-		triggers = new ConcurrentHashMap<Integer, ITrigger>();
+	public Triggers(Context context) {
+		this.context = context;
+		triggers = new ConcurrentHashMap<Integer, Trigger>();
 	}
 
 	/**
@@ -48,7 +47,7 @@ public class TriggerHandler {
 	 *            ID
 	 * @return 触发器
 	 */
-	public ITrigger get(int id) {
+	public Trigger get(int id) {
 		return triggers.get(id);
 	}
 
@@ -62,7 +61,7 @@ public class TriggerHandler {
 	 * @return ID
 	 */
 	public int add(String pattern, String command) {
-		ITrigger trigger = new SimpleTrigger(pattern, command);
+		Trigger trigger = new SimpleTrigger(pattern, command);
 		return add(trigger);
 	}
 
@@ -73,7 +72,7 @@ public class TriggerHandler {
 	 *            触发器
 	 * @return ID
 	 */
-	public int add(ITrigger trigger) {
+	public int add(Trigger trigger) {
 		int i = triggers.size();
 		triggers.put(i, trigger);
 		return i;
@@ -86,7 +85,7 @@ public class TriggerHandler {
 	 *            ID
 	 * @return 触发器
 	 */
-	public ITrigger remove(int id) {
+	public Trigger remove(int id) {
 		return triggers.remove(id);
 	}
 
@@ -127,9 +126,9 @@ public class TriggerHandler {
 		if (logger.isTraceEnabled()) {
 			logger.trace("fire: " + line.text);
 		}
-		for (Entry<Integer, ITrigger> entry : triggers.entrySet()) {
+		for (Entry<Integer, Trigger> entry : triggers.entrySet()) {
 			int id = entry.getKey();
-			ITrigger trigger = entry.getValue();
+			Trigger trigger = entry.getValue();
 			int n = trigger.requiresLineCount();
 			if (n > 1) {
 				Line prev = line;
@@ -144,7 +143,7 @@ public class TriggerHandler {
 				String[] args = trigger.match(line, pos != null ? pos : 0);
 				if (args != null) {
 					line.ptrs.put(id, line.text.length());
-					trigger.execute(client, args);
+					trigger.execute(context, args);
 				}
 			} else {
 				line.ptrs.put(id, line.text.length());

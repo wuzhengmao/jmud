@@ -1,7 +1,13 @@
 package org.mingy.jmud.model;
 
-import org.mingy.jmud.client.IMudClient;
-import org.mingy.jmud.model.TriggerHandler.Line;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.script.Invocable;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.mingy.jmud.model.Triggers.Line;
 
 /**
  * 触发器。
@@ -11,38 +17,67 @@ import org.mingy.jmud.model.TriggerHandler.Line;
  */
 public class SimpleTrigger extends Trigger {
 
-	/** 匹配模板 */
-	private String pattern;
+	/** 日志 */
+	private static final Log logger = LogFactory.getLog(Trigger.class);
 
-	/** 触发后执行的指令 */
-	private String command;
+	/** 正则表达式 */
+	private String regex;
+
+	/** 触发后执行的脚本 */
+	private String script;
+
+	/** 编译后的模板 */
+	private Pattern pattern;
 
 	/**
 	 * 构造器。
 	 * 
-	 * @param pattern
-	 *            匹配模板
+	 * @param regex
+	 *            正则表达式
 	 * @param command
-	 *            触发后执行的指令
+	 *            触发后执行的脚本
 	 */
-	public SimpleTrigger(String pattern, String command) {
+	public SimpleTrigger(String regex, String script) {
 		super();
-		this.pattern = pattern;
-		this.command = command;
+		this.regex = regex;
+		this.script = script;
+		this.pattern = Pattern.compile(regex);
 	}
 
+	@Override
 	public String[] match(Line line, int start) {
-		if (pattern.charAt(0) == '^' && start > 0)
+		if (regex.charAt(0) == '^' && start > 0)
 			return null;
-		if (pattern.charAt(pattern.length() - 1) == '$'
+		if (regex.charAt(regex.length() - 1) == '$'
 				&& !line.getText().endsWith("\n"))
 			return null;
+		Matcher m = pattern.matcher(line.getText().substring(start));
+		if (m.find()) {
+			String[] result = new String[m.groupCount() + 1];
+			result[0] = m.group();
+			for (int i = 1; i < result.length; i++)
+				result[i] = m.group(i);
+			if (logger.isDebugEnabled()) {
+				logger.debug("matches: " + result[0]);
+				for (int i = 1; i < result.length; i++)
+					logger.debug("args[" + i + "] = " + result[i]);
+			}
+			return result;
+		}
 		return null;
 	}
 
-	public void execute(IMudClient client, String[] args) {
-		// TODO Auto-generated method stub
-
+	@Override
+	public void execute(Context context, String[] args) {
+		try {
+			context.JS.eval("function exec(args) {" + script + "}");
+			((Invocable) context.JS).invokeFunction("exec",
+					new Object[] { args });
+		} catch (Exception e) {
+			if (logger.isErrorEnabled()) {
+				logger.error("error on invoke script: " + script, e);
+			}
+		}
 	}
 
 	/**
@@ -57,20 +92,20 @@ public class SimpleTrigger extends Trigger {
 	}
 
 	/**
-	 * 取得触发器的匹配模板。
+	 * 取得编译后的模板。
 	 * 
 	 * @return 匹配模板
 	 */
-	public String getPattern() {
+	public Pattern getPattern() {
 		return pattern;
 	}
 
 	/**
-	 * 取得触发后执行的指令。
+	 * 取得触发后执行的脚本。
 	 * 
-	 * @return 触发后执行的指令
+	 * @return 触发后执行的脚本
 	 */
-	public String getCommand() {
-		return command;
+	public String getScript() {
+		return script;
 	}
 }

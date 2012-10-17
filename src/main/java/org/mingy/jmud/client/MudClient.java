@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.mingy.jmud.model.Configurations;
+import org.mingy.jmud.model.Context;
 import org.mingy.jmud.model.ShortKey;
 
 /**
@@ -70,8 +70,8 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	private StyledText styledText;
 	/** 指令输入框 */
 	private Text commandInput;
-	/** 配置定义 */
-	private Configurations configurations;
+	/** 上下文 */
+	private Context context;
 	/** UI */
 	private Display display;
 	/** 富文本内容 */
@@ -115,26 +115,30 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	 *            富文本显示区
 	 * @param commandInput
 	 *            指令输入框
+	 * @param context
+	 *            上下文
 	 */
 	public MudClient(String hostname, int port, int connectTimeout,
 			String charset, StyledText styledText, Text commandInput,
-			Configurations configurations) {
+			Context context) {
 		this.hostname = hostname;
 		this.port = port;
 		this.connectTimeout = connectTimeout;
 		this.charset = Charset.forName(charset);
 		this.styledText = styledText;
 		this.commandInput = commandInput;
-		this.configurations = configurations;
+		this.context = context;
 		init();
 	}
 
+	@Override
 	public void connect() {
 		if (client == null)
 			client = new TelnetClient(hostname, port, this);
 		client.connect(connectTimeout);
 	}
 
+	@Override
 	public void close() {
 		if (client == null)
 			throw new IllegalStateException("no telnet client instance");
@@ -142,9 +146,11 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		client = null;
 	}
 
+	@Override
 	public void onConnected() {
 		echoForbidden = false;
 		display.syncExec(new Runnable() {
+			@Override
 			public void run() {
 				initSGR();
 				echo("Connected to " + hostname + ":" + port + "\n", SGR.INFO);
@@ -152,10 +158,12 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		});
 	}
 
+	@Override
 	public void onDisconnected() {
 		// TODO: 重连？
 	}
 
+	@Override
 	public void onReceived(byte[] data) {
 		try {
 			processLine(data);
@@ -166,20 +174,23 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		}
 	}
 
+	@Override
 	public void beep() {
 		Toolkit.getDefaultToolkit().beep();
 	}
 
+	@Override
 	public void echoOn() {
 		echoForbidden = false;
 	}
 
+	@Override
 	public void echoOff() {
 		echoForbidden = true;
 	}
 
 	private void init() {
-		configurations.init(this);
+		context.init(this);
 		display = styledText.getDisplay();
 		content = styledText.getContent();
 		styledText.setEditable(false);
@@ -253,6 +264,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	 * 监听并处理PageUp、PageDown和鼠标的滚卷事件。
 	 */
 	class ScrollListener implements Listener {
+		@Override
 		public void handleEvent(Event event) {
 			switch (event.type) {
 			case SWT.KeyDown:
@@ -402,6 +414,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		if (!echoForbidden) {
 			final String line = new String(bytes, start, length, charset);
 			display.syncExec(new Runnable() {
+				@Override
 				public void run() {
 					show(line, null, continues);
 				}
@@ -409,12 +422,14 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		}
 	}
 
+	@Override
 	public void show(String text, String style, boolean continues) {
-		configurations.TRIGGERS.handle(text, !continues);
 		if (text != null && text.length() > 0)
 			echo(text, style);
+		context.TRIGGERS.handle(text, !continues);
 	}
 
+	@Override
 	public void echo(String text, String style) {
 		SGR sgr = style != null ? new SGR(style, defaultSGR) : currentSGR;
 		int[] textColor = sgr.getTextColor();
@@ -476,11 +491,12 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	 * 监听快捷键。
 	 */
 	class ShortKeyListener implements Listener {
+		@Override
 		public void handleEvent(Event event) {
 			switch (event.type) {
 			case SWT.KeyDown:
 				int key = event.keyCode | event.stateMask;
-				ShortKey shortKey = configurations.SHORT_KEYS.get(key);
+				ShortKey shortKey = context.SHORT_KEYS.get(key);
 				if (shortKey != null) {
 					if (logger.isTraceEnabled()) {
 						logger.trace("short key command: "
@@ -505,14 +521,16 @@ public class MudClient implements TelnetClientListener, IMudClient {
 				commands.removeFirst();
 			cmdptr = commands.size();
 		}
-		command += "\n";
-		echo(command, SGR.ECHO);
 		send(command);
 	}
 
+	@Override
 	public void send(String command) {
+		command += "\n";
+		echo(command, SGR.ECHO);
 		if (client != null && client.isAvailable()) {
 			client.write(command.getBytes(charset));
+			System.out.println(context.JS.get("qi"));
 		}
 	}
 
