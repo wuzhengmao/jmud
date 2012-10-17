@@ -38,7 +38,7 @@ import org.mingy.jmud.model.ShortKey;
  * @author Mingy
  * @since 1.0.0
  */
-public class MudClient implements TelnetClientListener {
+public class MudClient implements TelnetClientListener, IMudClient {
 
 	/** 日志 */
 	private static final Log logger = LogFactory.getLog(MudClient.class);
@@ -53,7 +53,7 @@ public class MudClient implements TelnetClientListener {
 	private static final String DEFAULT_CHARSET = "GBK";
 	/** 富文本内容的最大行数 */
 	private static final int CONTENT_MAX_LINES = 1000;
-	/** 命令行历史记录数 */
+	/** 指令历史记录数 */
 	private static final int COMMAND_HISTORY_SIZE = 20;
 	/** TAB的长度 */
 	private static final int TABS = 8;
@@ -68,7 +68,7 @@ public class MudClient implements TelnetClientListener {
 	private Charset charset;
 	/** 富文本显示区 */
 	private StyledText styledText;
-	/** 命令行输入框 */
+	/** 指令输入框 */
 	private Text commandInput;
 	/** 配置定义 */
 	private Configurations configurations;
@@ -82,9 +82,9 @@ public class MudClient implements TelnetClientListener {
 	private SGR currentSGR;
 	/** Telnet客户端 */
 	private TelnetClient client;
-	/** 命令行历史记录 */
+	/** 指令历史记录 */
 	private LinkedList<String> commands;
-	/** 命令行历史选择时的指针 */
+	/** 指令历史选择时的指针 */
 	private int cmdptr;
 	/** 富文本显示区是否可以滚动 */
 	private boolean canScroll;
@@ -114,7 +114,7 @@ public class MudClient implements TelnetClientListener {
 	 * @param mainStyledText
 	 *            富文本显示区
 	 * @param commandInput
-	 *            命令行输入框
+	 *            指令输入框
 	 */
 	public MudClient(String hostname, int port, int connectTimeout,
 			String charset, StyledText styledText, Text commandInput,
@@ -129,18 +129,12 @@ public class MudClient implements TelnetClientListener {
 		init();
 	}
 
-	/**
-	 * 连接主机。
-	 */
 	public void connect() {
 		if (client == null)
 			client = new TelnetClient(hostname, port, this);
 		client.connect(connectTimeout);
 	}
 
-	/**
-	 * 断开连接并关闭客户端。
-	 */
 	public void close() {
 		if (client == null)
 			throw new IllegalStateException("no telnet client instance");
@@ -185,6 +179,7 @@ public class MudClient implements TelnetClientListener {
 	}
 
 	private void init() {
+		configurations.init(this);
 		display = styledText.getDisplay();
 		content = styledText.getContent();
 		styledText.setEditable(false);
@@ -372,11 +367,12 @@ public class MudClient implements TelnetClientListener {
 	}
 
 	private void processLine(byte[] bytes) throws Exception {
+		int n = bytes.length;
 		int p = 0;
 		int i = 0;
 		while ((i = matchEscStart(bytes, p)) >= 0) {
 			if (i > p) {
-				appendLine(bytes, p, i - p);
+				appendLine(bytes, p, i - p, true);
 				p = i;
 			}
 			int e = matchEscEnd(bytes, p);
@@ -398,42 +394,46 @@ public class MudClient implements TelnetClientListener {
 				break;
 			}
 		}
-		if (bytes.length > p) {
-			appendLine(bytes, p, bytes.length - p);
-		}
+		appendLine(bytes, p, n - p, false);
 	}
 
-	private void appendLine(byte[] bytes, int start, int length) {
+	private void appendLine(byte[] bytes, int start, int length,
+			final boolean continues) {
 		if (!echoForbidden) {
 			final String line = new String(bytes, start, length, charset);
 			display.syncExec(new Runnable() {
 				public void run() {
-					echo(line, null);
+					show(line, null, continues);
 				}
 			});
 		}
 	}
 
-	private void echo(String message, String sgrString) {
-		SGR sgr = sgrString != null ? new SGR(sgrString, defaultSGR)
-				: currentSGR;
+	public void show(String text, String style, boolean continues) {
+		configurations.TRIGGERS.handle(text, !continues);
+		if (text != null && text.length() > 0)
+			echo(text, style);
+	}
+
+	public void echo(String text, String style) {
+		SGR sgr = style != null ? new SGR(style, defaultSGR) : currentSGR;
 		int[] textColor = sgr.getTextColor();
 		int[] bgColor = sgr.getBackgroundColor();
-		final StyleRange style = new StyleRange(styledText.getCharCount(),
-				message.length(), new Color(display, textColor[0],
-						textColor[1], textColor[2]), new Color(display,
-						bgColor[0], bgColor[1], bgColor[2]));
+		final StyleRange sr = new StyleRange(styledText.getCharCount(),
+				text.length(), new Color(display, textColor[0], textColor[1],
+						textColor[2]), new Color(display, bgColor[0],
+						bgColor[1], bgColor[2]));
 		if (sgr.isBlink())
-			style.fontStyle |= SWT.BOLD;
+			sr.fontStyle |= SWT.BOLD;
 		if (sgr.isItalic())
-			style.fontStyle |= SWT.ITALIC;
+			sr.fontStyle |= SWT.ITALIC;
 		if (sgr.isUnderline())
-			style.underline = true;
+			sr.underline = true;
 		if (logger.isTraceEnabled()) {
-			logger.trace(message);
+			logger.trace(text);
 		}
-		styledText.append(message);
-		styledText.setStyleRange(style);
+		styledText.append(text);
+		styledText.setStyleRange(sr);
 		int n = styledText.getLineCount() - CONTENT_MAX_LINES;
 		if (n > 0) {
 			styledText.replaceTextRange(0, styledText.getOffsetAtLine(n), "");
@@ -506,11 +506,11 @@ public class MudClient implements TelnetClientListener {
 			cmdptr = commands.size();
 		}
 		command += "\n";
-		doCommand(command);
+		echo(command, SGR.ECHO);
+		send(command);
 	}
 
-	private void doCommand(String command) {
-		echo(command, SGR.ECHO);
+	public void send(String command) {
 		if (client != null && client.isAvailable()) {
 			client.write(command.getBytes(charset));
 		}
@@ -548,7 +548,7 @@ public class MudClient implements TelnetClientListener {
 		commandInput.setLayoutData(inputData);
 		shell.setSize(800, 600);
 		shell.open();
-		MudClient mc = new MudClient("pkuxkx.net", 5555, 10000,
+		IMudClient mc = new MudClient("pkuxkx.net", 5555, 10000,
 				DEFAULT_CHARSET, styledText, commandInput,
 				new org.mingy.jmud.model.pkuxkx.Configurations());
 		mc.connect();

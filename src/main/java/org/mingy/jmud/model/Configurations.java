@@ -1,5 +1,7 @@
 package org.mingy.jmud.model;
 
+import org.mingy.jmud.client.IMudClient;
+
 /**
  * 配置定义。
  * 
@@ -8,13 +10,24 @@ package org.mingy.jmud.model;
  */
 public class Configurations {
 
+	/** MUD客户端 */
+	private IMudClient client;
+
 	/** 快捷键定义 */
-	public final ShortKeys SHORT_KEYS;
+	public ShortKeys SHORT_KEYS;
+
+	/** 触发器定义 */
+	public TriggerHandler TRIGGERS;
 
 	/**
-	 * 构造器。
+	 * 初始化
+	 * 
+	 * @param client
+	 *            MUD客户端
 	 */
-	public Configurations() {
+	public void init(IMudClient client) {
+		this.client = client;
 		SHORT_KEYS = new ShortKeys();
+		TRIGGERS = new TriggerHandler(client);
 	}
 }
