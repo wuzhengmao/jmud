@@ -530,7 +530,6 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		echo(command, SGR.ECHO);
 		if (client != null && client.isAvailable()) {
 			client.write(command.getBytes(charset));
-			System.out.println(context.JS.get("qi"));
 		}
 	}
 

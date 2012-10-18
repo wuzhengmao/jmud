@@ -70,9 +70,17 @@ public class SimpleTrigger extends Trigger {
 	@Override
 	public void execute(Context context, String[] args) {
 		try {
-			context.JS.eval("function exec(args) {" + script + "}");
-			((Invocable) context.JS).invokeFunction("exec",
-					new Object[] { args });
+			/*
+			StringBuilder sb = new StringBuilder("function exec($0");
+			for (int i = 1; i < args.length; i++)
+				sb.append(",$").append(i);
+			sb.append(") {").append(script).append("}");
+			context.JS.eval(sb.toString());
+			Object[] objs = new Object[args.length];
+			for (int i = 0; i < args.length; i++)
+				objs[i] = args[i];
+			((Invocable) context.JS).invokeFunction("exec", objs); */
+			Commands.execute(context, script, args);
 		} catch (Exception e) {
 			if (logger.isErrorEnabled()) {
 				logger.error("error on invoke script: " + script, e);
