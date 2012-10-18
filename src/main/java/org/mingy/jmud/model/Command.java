@@ -16,6 +16,9 @@ public abstract class Command {
 	/** 日志 */
 	protected static final Log logger = LogFactory.getLog(Command.class);
 
+	/** 原始指令 */
+	protected String origin;
+
 	/** 参数 */
 	protected String[] args;
 
@@ -24,10 +27,9 @@ public abstract class Command {
 	 * 
 	 * @param context
 	 *            上下文
-	 * @param extras
-	 *            外部传递的参数
+	 * @return true表示执行成功
 	 */
-	public abstract void execute(Context context, String[] extras);
+	public abstract boolean execute(Context context);
 
 	@Override
 	public String toString() {

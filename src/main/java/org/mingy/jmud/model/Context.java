@@ -1,8 +1,5 @@
 package org.mingy.jmud.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -26,6 +23,9 @@ public class Context {
 	/** 快捷键定义 */
 	public ShortKeys SHORT_KEYS;
 
+	/** 别名定义 */
+	public Aliases ALIASES;
+
 	/** 触发器定义 */
 	public Triggers TRIGGERS;
 
@@ -47,54 +47,7 @@ public class Context {
 			throw new RuntimeException(e);
 		}
 		SHORT_KEYS = new ShortKeys();
+		ALIASES = new Aliases();
 		TRIGGERS = new Triggers(this);
 	}
-
-	/**
-	 * 执行指令。
-	 * 
-	 * @param command
-	 *            指令
-	 */
-	public void execute(String command) {
-		for (String cmd : splitCmds(command)) {
-			if (!cmd.isEmpty() && cmd.charAt(0) == '#') {
-				
-			} else {
-				CLIENT.send(cmd);
-			}
-		}
-	}
-
-	private static List<String> splitCmds(String command) {
-		List<String> cmds = new ArrayList<String>();
-		int p = 0;
-		int k = 0;
-		for (int i = 0; i < command.length(); i++) {
-			char b = command.charAt(i);
-			if (k == 0 && b == ';') {
-				if (i > p) {
-					String cmd = command.substring(p, i).trim();
-					if (!cmd.isEmpty())
-						cmds.add(cmd);
-				}
-				p = i + 1;
-			} else if (b == '{') {
-				k++;
-			} else if (b == '}') {
-				if (k > 0)
-					k--;
-			}
-		}
-		if (p < command.length()) {
-			String cmd = command.substring(p).trim();
-			if (!cmd.isEmpty())
-				cmds.add(cmd);
-		}
-		if (cmds.isEmpty())
-			cmds.add("");
-		return cmds;
-	}
-	
-	
 }

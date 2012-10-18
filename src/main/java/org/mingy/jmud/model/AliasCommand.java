@@ -9,8 +9,14 @@ package org.mingy.jmud.model;
 public class AliasCommand extends Command {
 
 	@Override
-	public void execute(Context context, String[] extras) {
-		// TODO Auto-generated method stub
-
+	public boolean execute(Context context) {
+		if (args.length == 0 || args.length > 2)
+			return false;
+		if (args.length == 1) {
+			context.ALIASES.remove(args[0]);
+		} else {
+			context.ALIASES.add(args[0], args[1]);
+		}
+		return true;
 	}
 }

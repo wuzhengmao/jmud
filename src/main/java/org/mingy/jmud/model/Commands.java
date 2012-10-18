@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mingy.jmud.client.SGR;
 
 /**
  * 指令的定义和处理。
@@ -26,6 +27,7 @@ public class Commands {
 		TYPES = new HashMap<String, Class<? extends Command>>();
 		TYPES.put("#al", AliasCommand.class);
 		TYPES.put("#alias", AliasCommand.class);
+		TYPES.put("#set", SetCommand.class);
 	}
 
 	/**
@@ -39,9 +41,152 @@ public class Commands {
 	 *            参数
 	 */
 	public static void execute(Context context, String script, String[] args) {
+		script = replaceArgs(script, args);
 		for (Command cmd : parse(script)) {
-			cmd.execute(context, args);
+			if (!cmd.execute(context)) {
+				if (logger.isWarnEnabled()) {
+					logger.warn("ignore: " + cmd.origin);
+				}
+				context.CLIENT.echo("ERROR: " + cmd.origin, SGR.ERROR);
+			}
 		}
+	}
+
+	/**
+	 * 替换指令中的变量。
+	 * 
+	 * @param context
+	 *            上下文
+	 * @param command
+	 *            指令
+	 * @return 替换后的指令
+	 */
+	public static String replaceVariables(Context context, String command) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("before: " + command);
+		}
+		StringBuilder sb = new StringBuilder();
+		int l = 0;
+		int p = 0;
+		int k = 0;
+		for (int i = 0; i < command.length(); i++) {
+			char b = command.charAt(i);
+			if (k == 0) {
+				if (b == '@') {
+					k = 1;
+					p = i;
+				}
+			} else if (k == 1) {
+				if ((b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')) {
+					k = 2;
+				} else if (b == '@') {
+					sb.append(command, l, i);
+					k = 0;
+					l = i + 1;
+				} else {
+					k = 0;
+				}
+			} else if (k == 2) {
+				if (!((b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
+						|| (b >= '0' && b <= '9') || b == '_')) {
+					if (p > l)
+						sb.append(command, l, p);
+					String var = command.substring(p + 1, i);
+					Object value = context.JS.get(var);
+					if (value != null)
+						sb.append(value);
+					k = 0;
+					l = i;
+				}
+			}
+		}
+		if (k == 2) {
+			if (p > l)
+				sb.append(command, l, p);
+			String var = command.substring(p + 1);
+			Object value = context.JS.get(var);
+			if (value != null)
+				sb.append(value);
+		} else {
+			if (command.length() > l)
+				sb.append(command, l, command.length());
+		}
+		if (logger.isTraceEnabled()) {
+			logger.trace("after: " + sb.toString());
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * 替换脚本中的参数。
+	 * 
+	 * @param script
+	 *            脚本
+	 * @param args
+	 *            参数
+	 * @return 替换后的脚本
+	 */
+	public static String replaceArgs(String script, String[] args) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("before: " + script);
+		}
+		StringBuilder sb = new StringBuilder();
+		int l = 0;
+		int p = 0;
+		int k = 0;
+		for (int i = 0; i < script.length(); i++) {
+			char b = script.charAt(i);
+			if (k == 0) {
+				if (b == '%') {
+					k = 1;
+					p = i;
+				}
+			} else if (k == 1) {
+				if (b >= '0' && b <= '9') {
+					k = 2;
+				} else if (b == '*') {
+					if (p > l)
+						sb.append(script, l, p);
+					for (int j = 1; j < args.length; j++) {
+						if (j > 1)
+							sb.append(' ');
+						sb.append(args[j]);
+					}
+					k = 0;
+					l = i + 1;
+				} else if (b == '%') {
+					sb.append(script, l, i);
+					k = 0;
+					l = i + 1;
+				} else {
+					k = 0;
+				}
+			} else if (k == 2) {
+				if (b < '0' || b > '9') {
+					if (p > l)
+						sb.append(script, l, p);
+					int j = Integer.parseInt(script.substring(p + 1, i));
+					if (j < args.length)
+						sb.append(args[j]);
+					k = 0;
+					l = i;
+				}
+			}
+		}
+		if (k == 2) {
+			if (p > l)
+				sb.append(script, l, p);
+			int j = Integer.parseInt(script.substring(p + 1));
+			if (j < args.length)
+				sb.append(args[j]);
+		} else {
+			if (script.length() > l)
+				sb.append(script, l, script.length());
+		}
+		if (logger.isTraceEnabled()) {
+			logger.trace("after: " + sb.toString());
+		}
+		return sb.toString();
 	}
 
 	/**
@@ -61,24 +206,18 @@ public class Commands {
 	}
 
 	private static Command parseCmd(String command) {
-		Command cmd;
+		Command cmd = null;
 		if (command.length() > 2 && command.charAt(0) == '{'
 				&& command.charAt(command.length() - 1) == '}')
 			command = command.substring(1, command.length() - 1);
-		if (command.isEmpty() || command.charAt(0) != '#') {
-			cmd = new DefaultCommand();
-			cmd.args = new String[1];
-			cmd.args[0] = command;
-		} else {
-			List<String> list = split(command, ' ');
-			Class<? extends Command> clz = TYPES.get(list.get(0));
+		List<String> list = split(command, ' ');
+		String s = list.get(0);
+		if (!s.isEmpty() && s.charAt(0) == '#') {
+			Class<? extends Command> clz = TYPES.get(s);
 			if (clz == null) {
 				if (logger.isWarnEnabled()) {
-					logger.warn("unknow command type: " + list.get(0));
+					logger.warn("unknow command type: " + s);
 				}
-				cmd = new DefaultCommand();
-				cmd.args = new String[1];
-				cmd.args[0] = command;
 			} else {
 				try {
 					cmd = clz.newInstance();
@@ -90,12 +229,16 @@ public class Commands {
 						logger.error("error on new instance: " + clz.getName(),
 								e);
 					}
-					cmd = new DefaultCommand();
-					cmd.args = new String[1];
-					cmd.args[0] = command;
 				}
 			}
 		}
+		if (cmd == null) {
+			cmd = new DefaultCommand();
+			cmd.args = new String[list.size()];
+			for (int i = 0; i < cmd.args.length; i++)
+				cmd.args[i] = list.get(i);
+		}
+		cmd.origin = command;
 		if (logger.isTraceEnabled()) {
 			logger.trace(cmd);
 		}

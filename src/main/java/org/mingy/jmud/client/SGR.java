@@ -1,6 +1,5 @@
 package org.mingy.jmud.client;
 
-
 /**
  * <a href="http://en.wikipedia.org/wiki/ANSI_escape_code#Colors">Select Graphic
  * Rendition</a>
@@ -10,15 +9,17 @@ package org.mingy.jmud.client;
  */
 public class SGR {
 
+	/** ESC */
+	private static final String ESC = new String(new byte[] { 27 });
+
 	/** 默认的文字颜色 */
-	public static final String DEFAULT = new String(new byte[] { 27, '[', '0',
-			'm' });
+	public static final String DEFAULT = ESC + "[0m";
 	/** 回显的文字颜色 */
-	public static final String ECHO = new String(new byte[] { 27, '[', '1',
-			';', '3', '3', 'm' });
+	public static final String ECHO = ESC + "[1;33m";
 	/** 提示信息的颜色 */
-	public static final String INFO = new String(new byte[] { 27, '[', '1',
-			';', '3', '6', 'm' });
+	public static final String INFO = ESC + "[1;36m";
+	/** 错误信息的颜色 */
+	public static final String ERROR = ESC + "[1;31;47m";
 
 	private static int DEFAULT_BACKGROUND_COLOR_INDEX = 0;
 	private static int DEFAULT_TEXT_COLOR_INDEX = 2;

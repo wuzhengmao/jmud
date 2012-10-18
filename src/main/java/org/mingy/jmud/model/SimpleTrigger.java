@@ -3,8 +3,6 @@ package org.mingy.jmud.model;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.script.Invocable;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mingy.jmud.model.Triggers.Line;

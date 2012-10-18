@@ -16,11 +16,13 @@ public class Configurations extends Context {
 	public void init(IMudClient client) {
 		super.init(client);
 		SHORT_KEYS.add(SWT.KEYPAD_0, "hp");
+		ALIASES.add("test", "say %*");
+		JS.put("i", "hello");
 		TRIGGERS.add("^您的英文名字（要注册新人物请输入new）：", "kscs");
 		TRIGGERS.add("此ID档案已存在，请输入密码：", "zxc123");
 		TRIGGERS.add(
 				"^【 精神 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(\\d+)%\\]\\s*【 精力 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\(\\+\\s*(\\d+)\\)$",
-				"ok");
+				"#set i @i+'-'+%1;test @i");
 
 	}
 }
