@@ -28,7 +28,7 @@ public class Context extends Scope {
 	private Line last;
 
 	public Context() {
-		super("top", null);
+		super("root", null);
 	}
 
 	@Override

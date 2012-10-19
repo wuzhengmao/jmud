@@ -25,9 +25,13 @@ public class Commands {
 
 	static {
 		TYPES = new HashMap<String, Class<? extends Command>>();
+		TYPES.put("#m+", ModuleCommand.class);
+		TYPES.put("#m-", ModuleCommand.class);
+		TYPES.put("#set", SetCommand.class);
 		TYPES.put("#al", AliasCommand.class);
 		TYPES.put("#alias", AliasCommand.class);
-		TYPES.put("#set", SetCommand.class);
+		TYPES.put("#t+", TriggerCommand.class);
+		TYPES.put("#t-", TriggerCommand.class);
 	}
 
 	/**
@@ -48,7 +52,7 @@ public class Commands {
 				if (logger.isWarnEnabled()) {
 					logger.warn("ignore: " + cmd.origin);
 				}
-				scope.echoText("ERROR: " + cmd.origin, SGR.ERROR);
+				scope.echoText("ERROR: " + cmd.origin + "\n", SGR.ERROR);
 			}
 		}
 	}
@@ -219,6 +223,7 @@ public class Commands {
 			} else {
 				try {
 					cmd = clz.newInstance();
+					cmd.header = s;
 					cmd.args = new String[list.size() - 1];
 					for (int i = 0; i < cmd.args.length; i++)
 						cmd.args[i] = list.get(i + 1);

@@ -19,6 +19,9 @@ public abstract class Command {
 	/** 原始指令 */
 	protected String origin;
 
+	/** 指令头 */
+	protected String header;
+
 	/** 参数 */
 	protected String[] args;
 
@@ -101,7 +104,7 @@ public abstract class Command {
 
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + " [args="
-				+ Arrays.toString(args) + "]";
+		return this.getClass().getSimpleName() + " [header=" + header
+				+ ", args=" + Arrays.toString(args) + "]";
 	}
 }

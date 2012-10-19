@@ -258,7 +258,7 @@ public interface IScope {
 	 * 设置触发器组是否启用。
 	 * 
 	 * @param group
-	 *            组名
+	 *            组名，"*"表示所有组，"**"表示当前及下级模块的所有组
 	 * @param enabled
 	 *            true为已启用
 	 * @return 如组不存在时返回false

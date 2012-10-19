@@ -9,6 +9,7 @@ import javax.script.ScriptEngine;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mingy.jmud.client.IMudClient;
+import org.mingy.jmud.client.SGR;
 import org.mingy.jmud.model.Triggers.Line;
 
 /**
@@ -112,6 +113,8 @@ public abstract class Scope implements IScope {
 						+ (enabled ? "enable" : "disable") + " module: " + name);
 			}
 			this.enabled = enabled;
+			echoText("Module " + name + " is "
+					+ (enabled ? "enabled" : "disabled") + "\n", SGR.INFO);
 		}
 	}
 
@@ -278,11 +281,41 @@ public abstract class Scope implements IScope {
 
 	@Override
 	public boolean setTriggerEnabled(String group, boolean enabled) {
+		boolean all = false;
+		if ("**".equals(group)) {
+			group = "*";
+			all = true;
+		}
 		boolean b = getTriggers().setEnabled(group, enabled);
 		if (b) {
-			logger.debug("[" + getName() + "] TRIGGER: "
-					+ (enabled ? "enable" : "disable")
-					+ (group != null && group.length() > 0 ? " " + group : ""));
+			if (logger.isDebugEnabled()) {
+				logger.debug("["
+						+ getName()
+						+ "] TRIGGER: "
+						+ (enabled ? "enable" : "disable")
+						+ (group != null && group.length() > 0 ? " "
+								+ ("*".equals(group) ? "ALL" : group) : ""));
+			}
+			String m = this instanceof Context ? "root"
+					: ("module " + getName());
+			if ("*".equals(group)) {
+				echoText("All triggers in " + m + " is "
+						+ (enabled ? "enabled" : "disabled") + "\n", SGR.INFO);
+			} else {
+				echoText(
+						(group == null || group.length() == 0 ? "Ungrouped triggers"
+								: ("Trigger group " + group))
+								+ " in "
+								+ m
+								+ " is "
+								+ (enabled ? "enabled" : "disabled") + "\n",
+						SGR.INFO);
+			}
+		}
+		if (all) {
+			for (Scope child : getChildren()) {
+				child.setTriggerEnabled("**", enabled);
+			}
 		}
 		return b;
 	}

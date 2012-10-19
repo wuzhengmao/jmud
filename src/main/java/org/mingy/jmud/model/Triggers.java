@@ -132,7 +132,7 @@ public class Triggers {
 	 * 设置触发器组是否启用。
 	 * 
 	 * @param group
-	 *            组名
+	 *            组名，"*"表示所有组
 	 * @param enabled
 	 *            true为已启用
 	 * @return 如组不存在时返回false
@@ -140,12 +140,18 @@ public class Triggers {
 	public boolean setEnabled(String group, boolean enabled) {
 		if (group == null)
 			group = "";
-		TriggerGroup tg = groups.get(group);
-		if (tg != null) {
-			tg.enabled = enabled;
+		if ("*".equals(group)) {
+			for (TriggerGroup tg : groups.values())
+				tg.enabled = enabled;
 			return true;
 		} else {
-			return false;
+			TriggerGroup tg = groups.get(group);
+			if (tg != null) {
+				tg.enabled = enabled;
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
