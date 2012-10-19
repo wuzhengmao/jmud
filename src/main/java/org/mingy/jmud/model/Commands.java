@@ -33,21 +33,22 @@ public class Commands {
 	/**
 	 * 执行脚本
 	 * 
-	 * @param context
+	 * @param scope
 	 *            上下文
 	 * @param script
 	 *            脚本
 	 * @param args
 	 *            参数
 	 */
-	public static void execute(Context context, String script, String[] args) {
-		script = replaceArgs(script, args);
+	public static void execute(IScope scope, String script, String[] args) {
+		if (args != null)
+			script = replaceArgs(script, args);
 		for (Command cmd : parse(script)) {
-			if (!cmd.execute(context)) {
+			if (!cmd.execute(scope)) {
 				if (logger.isWarnEnabled()) {
 					logger.warn("ignore: " + cmd.origin);
 				}
-				context.CLIENT.echo("ERROR: " + cmd.origin, SGR.ERROR);
+				scope.echoText("ERROR: " + cmd.origin, SGR.ERROR);
 			}
 		}
 	}
@@ -55,13 +56,13 @@ public class Commands {
 	/**
 	 * 替换指令中的变量。
 	 * 
-	 * @param context
+	 * @param scope
 	 *            上下文
 	 * @param command
 	 *            指令
 	 * @return 替换后的指令
 	 */
-	public static String replaceVariables(Context context, String command) {
+	public static String replaceVariables(IScope scope, String command) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("before: " + command);
 		}
@@ -92,7 +93,7 @@ public class Commands {
 					if (p > l)
 						sb.append(command, l, p);
 					String var = command.substring(p + 1, i);
-					Object value = context.JS.get(var);
+					Object value = scope.getVariable(var);
 					if (value != null)
 						sb.append(value);
 					k = 0;
@@ -104,7 +105,7 @@ public class Commands {
 			if (p > l)
 				sb.append(command, l, p);
 			String var = command.substring(p + 1);
-			Object value = context.JS.get(var);
+			Object value = scope.getVariable(var);
 			if (value != null)
 				sb.append(value);
 		} else {
@@ -207,9 +208,6 @@ public class Commands {
 
 	private static Command parseCmd(String command) {
 		Command cmd = null;
-		if (command.length() > 2 && command.charAt(0) == '{'
-				&& command.charAt(command.length() - 1) == '}')
-			command = command.substring(1, command.length() - 1);
 		List<String> list = split(command, ' ');
 		String s = list.get(0);
 		if (!s.isEmpty() && s.charAt(0) == '#') {
@@ -246,6 +244,9 @@ public class Commands {
 	}
 
 	private static List<String> split(String command, char ch) {
+		if (command.length() > 1 && command.charAt(0) == '{'
+				&& command.charAt(command.length() - 1) == '}')
+			command = command.substring(1, command.length() - 1);
 		List<String> cmds = new ArrayList<String>();
 		int p = 0;
 		int k = 0;
@@ -267,6 +268,9 @@ public class Commands {
 		}
 		if (p < command.length()) {
 			String cmd = command.substring(p).trim();
+			if (cmd.length() > 1 && cmd.charAt(0) == '{'
+					&& cmd.charAt(cmd.length() - 1) == '}')
+				cmd = cmd.substring(1, cmd.length() - 1);
 			if (!cmd.isEmpty())
 				cmds.add(cmd);
 		}

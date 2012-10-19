@@ -43,4 +43,14 @@ public class Alias {
 	public String getScript() {
 		return script;
 	}
+
+	/**
+	 * 设置脚本。
+	 * 
+	 * @param script
+	 *            脚本
+	 */
+	public void setScript(String script) {
+		this.script = script;
+	}
 }

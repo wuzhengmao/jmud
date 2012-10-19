@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.mingy.jmud.model.Commands;
 import org.mingy.jmud.model.Context;
 import org.mingy.jmud.model.ShortKey;
 
@@ -426,7 +427,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	public void show(String text, String style, boolean continues) {
 		if (text != null && text.length() > 0)
 			echo(text, style);
-		context.TRIGGERS.handle(text, !continues);
+		context.handleText(text, !continues);
 	}
 
 	@Override
@@ -496,7 +497,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 			switch (event.type) {
 			case SWT.KeyDown:
 				int key = event.keyCode | event.stateMask;
-				ShortKey shortKey = context.SHORT_KEYS.get(key);
+				ShortKey shortKey = context.getShortKey(key);
 				if (shortKey != null) {
 					if (logger.isTraceEnabled()) {
 						logger.trace("short key command: "
@@ -521,7 +522,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 				commands.removeFirst();
 			cmdptr = commands.size();
 		}
-		send(command);
+		Commands.execute(context, command, null);
 	}
 
 	@Override

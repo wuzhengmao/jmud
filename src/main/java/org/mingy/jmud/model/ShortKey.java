@@ -10,7 +10,7 @@ public class ShortKey {
 
 	/** 组合键 */
 	private int key;
-	/** 命令行 */
+	/** 指令 */
 	private String command;
 
 	/**
@@ -54,11 +54,21 @@ public class ShortKey {
 	}
 
 	/**
-	 * 返回命令行。
+	 * 返回指令。
 	 * 
-	 * @return 命令行
+	 * @return 指令
 	 */
 	public String getCommand() {
 		return command;
+	}
+
+	/**
+	 * 设置指令。
+	 * 
+	 * @param command
+	 *            指令
+	 */
+	public void setCommand(String command) {
+		this.command = command;
 	}
 }

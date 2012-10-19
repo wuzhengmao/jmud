@@ -1,12 +1,10 @@
 package org.mingy.jmud.model;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * 触发器的定义和处理。
@@ -16,137 +14,165 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Triggers {
 
-	/** 日志 */
-	private static final Log logger = LogFactory.getLog(Trigger.class);
+	/** 序列号 */
+	private static int SEQ = 0;
 
-	/** 最大保留的行数 */
-	private static final int MAX_LINES = 10;
-
-	/** 上下文 */
-	private Context context;
-	/** 最后行 */
-	private Line last;
 	/** 所有触发器 */
-	private Map<Integer, Trigger> triggers;
+	private Map<String, TriggerGroup> groups;
 
 	/**
 	 * 构造器。
 	 * 
-	 * @param client
-	 *            MUD客户端
+	 * @param scope
+	 *            上下文
 	 */
-	public Triggers(Context context) {
-		this.context = context;
-		triggers = new ConcurrentHashMap<Integer, Trigger>();
+	public Triggers() {
+		groups = new ConcurrentHashMap<String, TriggerGroup>();
+		groups.put("", new TriggerGroup());
 	}
 
 	/**
-	 * 取得ID对应的触发器。
+	 * 取得一组触发器。
 	 * 
-	 * @param id
-	 *            ID
-	 * @return 触发器
+	 * @param group
+	 *            组名
+	 * @return 一组触发器
 	 */
-	public Trigger get(int id) {
-		return triggers.get(id);
-	}
-
-	/**
-	 * 添加一个简单的触发器。
-	 * 
-	 * @param pattern
-	 *            匹配模板
-	 * @param command
-	 *            触发后执行的指令
-	 * @return ID
-	 */
-	public int add(String pattern, String command) {
-		Trigger trigger = new SimpleTrigger(pattern, command);
-		return add(trigger);
+	public Collection<Trigger> get(String group) {
+		if (group == null)
+			group = "";
+		TriggerGroup tg = groups.get(group);
+		return tg != null ? tg.triggers.values() : null;
 	}
 
 	/**
 	 * 添加一个触发器。
 	 * 
+	 * @param group
+	 *            组名
 	 * @param trigger
 	 *            触发器
-	 * @return ID
+	 * @return true表示添加成功，如该触发器已存在则返回false
 	 */
-	public int add(Trigger trigger) {
-		int i = triggers.size();
-		triggers.put(i, trigger);
-		return i;
-	}
-
-	/**
-	 * 移除指定ID的触发器。
-	 * 
-	 * @param id
-	 *            ID
-	 * @return 触发器
-	 */
-	public Trigger remove(int id) {
-		return triggers.remove(id);
-	}
-
-	/**
-	 * 处理文本。
-	 * 
-	 * @param text
-	 *            文本
-	 * @param force
-	 *            true时强制处理，否则只有在一行结束后再处理
-	 */
-	public void handle(String text, boolean force) {
-		if (last == null || last.getText().endsWith("\n")) {
-			Line line = new Line(text);
-			line.prev = last;
-			if (last != null)
-				last.next = line;
-			last = line;
+	public boolean add(String group, Trigger trigger) {
+		if (group == null)
+			group = "";
+		TriggerGroup tg = groups.get(group);
+		if (tg == null) {
+			tg = new TriggerGroup();
+			tg.name = group;
+			groups.put(group, tg);
+		}
+		if (!tg.triggers.containsValue(trigger)) {
+			tg.triggers.put(++SEQ, trigger);
+			return true;
 		} else {
-			last.text += text;
-		}
-		if (force || last.text.endsWith("\n")) {
-			fire(last);
-		}
-		Line line = last;
-		for (int i = 0; i < MAX_LINES; i++) {
-			if (line == null)
-				break;
-			line = line.prev;
-		}
-		if (line != null) {
-			line.next.prev = null;
-			line.next = null;
+			return false;
 		}
 	}
 
-	private void fire(Line line) {
-		if (logger.isTraceEnabled()) {
-			logger.trace("fire: " + line.text);
-		}
-		for (Entry<Integer, Trigger> entry : triggers.entrySet()) {
-			int id = entry.getKey();
-			Trigger trigger = entry.getValue();
-			int n = trigger.requiresLineCount();
-			if (n > 1) {
-				Line prev = line;
-				while (n > 1 && (prev = prev.prev) != null) {
-					n--;
+	/**
+	 * 添加一个简单的触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param regex
+	 *            正则表达式
+	 * @param script
+	 *            脚本
+	 * @return 新增的触发器
+	 */
+	public Trigger add(String group, String regex, String script) {
+		if (group == null)
+			group = "";
+		Trigger trigger = new SimpleTrigger(regex, script);
+		add(group, trigger);
+		return trigger;
+	}
+
+	/**
+	 * 移除一个触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param trigger
+	 *            触发器
+	 * @return true表示移除成功，如该触发器不存在则返回false
+	 */
+	public boolean remove(String group, Trigger trigger) {
+		if (group == null)
+			group = "";
+		TriggerGroup tg = groups.get(group);
+		if (tg != null) {
+			for (Entry<Integer, Trigger> entry : tg.triggers.entrySet()) {
+				if (entry.getValue().equals(trigger)) {
+					tg.triggers.remove(entry.getKey());
+					return true;
 				}
-				if (prev == null)
-					continue;
 			}
-			if (trigger.isEnabled()) {
-				Integer pos = line.ptrs.get(id);
-				String[] args = trigger.match(line, pos != null ? pos : 0);
-				if (args != null) {
-					line.ptrs.put(id, line.text.length());
-					trigger.execute(context, args);
+		}
+		return false;
+	}
+
+	/**
+	 * 返回触发器组是否启用。
+	 * 
+	 * @param group
+	 *            组名
+	 * @return true为已启用，如组不存在也会返回false
+	 */
+	public boolean isEnabled(String group) {
+		if (group == null)
+			group = "";
+		TriggerGroup tg = groups.get(group);
+		return tg != null ? tg.enabled : false;
+	}
+
+	/**
+	 * 设置触发器组是否启用。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param enabled
+	 *            true为已启用
+	 * @return 如组不存在时返回false
+	 */
+	public boolean setEnabled(String group, boolean enabled) {
+		if (group == null)
+			group = "";
+		TriggerGroup tg = groups.get(group);
+		if (tg != null) {
+			tg.enabled = enabled;
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public void handleLine(IScope scope, Line line) {
+		for (TriggerGroup group : groups.values()) {
+			for (Entry<Integer, Trigger> entry : group.triggers.entrySet()) {
+				int id = entry.getKey();
+				Trigger trigger = entry.getValue();
+				int n = trigger.requiresLineCount();
+				if (n > 1) {
+					Line prev = line;
+					while (n > 1 && (prev = prev.prev) != null) {
+						n--;
+					}
+					if (prev == null)
+						continue;
 				}
-			} else {
-				line.ptrs.put(id, line.text.length());
+				if (group.enabled) {
+					Integer pos = line.ptrs.get(id);
+					String[] args = trigger.match(line, pos != null ? pos : 0);
+					if (args != null) {
+						line.ptrs.put(id, line.text.length());
+						trigger.execute(scope, args);
+					}
+				} else {
+					line.ptrs.put(id, line.text.length());
+				}
 			}
 		}
 	}
@@ -154,12 +180,12 @@ public class Triggers {
 	/**
 	 * 一行文本，并包含对上下行的引用。
 	 */
-	public class Line {
+	public static class Line {
 
-		private String text;
-		private Line prev;
-		private Line next;
-		private Map<Integer, Integer> ptrs;
+		String text;
+		Line prev;
+		Line next;
+		Map<Integer, Integer> ptrs;
 
 		Line(String text) {
 			this.text = text;
@@ -192,5 +218,15 @@ public class Triggers {
 		public Line getNext() {
 			return next;
 		}
+	}
+
+	/**
+	 * 一组触发器。
+	 */
+	static class TriggerGroup {
+
+		String name;
+		boolean enabled = true;
+		Map<Integer, Trigger> triggers = new ConcurrentHashMap<Integer, Trigger>();
 	}
 }

@@ -40,10 +40,11 @@ public class ShortKeys {
 		ALL.putAll(DEFAULT);
 	}
 
-	private static void add(int key, String command,
+	private static ShortKey add(int key, String command,
 			Map<Integer, ShortKey> target) {
 		ShortKey shortKey = new ShortKey(key, command);
 		target.put(key, shortKey);
+		return shortKey;
 	}
 
 	/**
@@ -58,15 +59,22 @@ public class ShortKeys {
 	}
 
 	/**
-	 * 添加一个快捷键。
+	 * 设置一个快捷键。
 	 * 
 	 * @param key
 	 *            组合键
 	 * @param command
 	 *            命令行
+	 * @return 新增或修改后的快捷键
 	 */
-	public void add(int key, String command) {
-		add(key, command, ALL);
+	public ShortKey set(int key, String command) {
+		ShortKey shortKey = get(key);
+		if (shortKey != null) {
+			shortKey.setCommand(command);
+		} else {
+			shortKey = add(key, command, ALL);
+		}
+		return shortKey;
 	}
 
 	/**

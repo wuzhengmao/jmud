@@ -66,7 +66,7 @@ public class SimpleTrigger extends Trigger {
 	}
 
 	@Override
-	public void execute(Context context, String[] args) {
+	public void execute(IScope scope, String[] args) {
 		try {
 			/*
 			StringBuilder sb = new StringBuilder("function exec($0");
@@ -78,7 +78,7 @@ public class SimpleTrigger extends Trigger {
 			for (int i = 0; i < args.length; i++)
 				objs[i] = args[i];
 			((Invocable) context.JS).invokeFunction("exec", objs); */
-			Commands.execute(context, script, args);
+			Commands.execute(scope, script, args);
 		} catch (Exception e) {
 			if (logger.isErrorEnabled()) {
 				logger.error("error on invoke script: " + script, e);
@@ -113,5 +113,10 @@ public class SimpleTrigger extends Trigger {
 	 */
 	public String getScript() {
 		return script;
+	}
+
+	@Override
+	public String toString() {
+		return "SimpleTrigger [regex=" + regex + "]";
 	}
 }

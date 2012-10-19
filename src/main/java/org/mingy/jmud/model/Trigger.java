@@ -10,8 +10,6 @@ import org.mingy.jmud.model.Triggers.Line;
  */
 public abstract class Trigger {
 
-	private boolean enabled = true;
-
 	/**
 	 * 触发器要求的文本行数。
 	 * 
@@ -35,29 +33,10 @@ public abstract class Trigger {
 	/**
 	 * 执行一系列指令。
 	 * 
-	 * @param context
+	 * @param scope
 	 *            上下文
 	 * @param args
 	 *            匹配成功的参数，始终不为null
 	 */
-	public abstract void execute(Context context, String[] args);
-
-	/**
-	 * 返回触发器是否启用。
-	 * 
-	 * @return true为启用
-	 */
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	/**
-	 * 设置触发器是否启用。
-	 * 
-	 * @param enabled
-	 *            true为启用
-	 */
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
+	public abstract void execute(IScope scope, String[] args);
 }
