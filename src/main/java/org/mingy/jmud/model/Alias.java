@@ -21,7 +21,7 @@ public class Alias {
 	 * @param script
 	 *            脚本
 	 */
-	public Alias(String name, String script) {
+	Alias(String name, String script) {
 		this.name = name;
 		this.script = script;
 	}
@@ -50,7 +50,7 @@ public class Alias {
 	 * @param script
 	 *            脚本
 	 */
-	public void setScript(String script) {
+	void setScript(String script) {
 		this.script = script;
 	}
 }

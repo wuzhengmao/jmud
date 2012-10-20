@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mingy.jmud.client.SGR;
+import org.mingy.jmud.util.Variables;
 
 /**
  * 指令的定义和处理。
@@ -15,7 +15,7 @@ import org.mingy.jmud.client.SGR;
  * @author Mingy
  * @since 1.0.0
  */
-public class Commands {
+public abstract class Commands {
 
 	/** 日志 */
 	private static final Log logger = LogFactory.getLog(Commands.class);
@@ -32,29 +32,10 @@ public class Commands {
 		TYPES.put("#alias", AliasCommand.class);
 		TYPES.put("#t+", TriggerCommand.class);
 		TYPES.put("#t-", TriggerCommand.class);
-	}
-
-	/**
-	 * 执行脚本
-	 * 
-	 * @param scope
-	 *            上下文
-	 * @param script
-	 *            脚本
-	 * @param args
-	 *            参数
-	 */
-	public static void execute(IScope scope, String script, String[] args) {
-		if (args != null)
-			script = replaceArgs(script, args);
-		for (Command cmd : parse(script)) {
-			if (!cmd.execute(scope)) {
-				if (logger.isWarnEnabled()) {
-					logger.warn("ignore: " + cmd.origin);
-				}
-				scope.echoText("ERROR: " + cmd.origin + "\n", SGR.ERROR);
-			}
-		}
+		TYPES.put("#ti", TimerCommand.class);
+		TYPES.put("#timer", TimerCommand.class);
+		TYPES.put("#ts", TimerCommand.class);
+		TYPES.put("#tset", TimerCommand.class);
 	}
 
 	/**
@@ -64,9 +45,12 @@ public class Commands {
 	 *            上下文
 	 * @param command
 	 *            指令
+	 * @param isExpression
+	 *            是否为表达式
 	 * @return 替换后的指令
 	 */
-	public static String replaceVariables(IScope scope, String command) {
+	public static String replaceVariables(IScope scope, String command,
+			boolean isExpression) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("before: " + command);
 		}
@@ -98,8 +82,10 @@ public class Commands {
 						sb.append(command, l, p);
 					String var = command.substring(p + 1, i);
 					Object value = scope.getVariable(var);
-					if (value != null)
-						sb.append(value);
+					if (isExpression)
+						sb.append(Variables.toJSvar(value));
+					else
+						sb.append(Variables.toString(value));
 					k = 0;
 					l = i;
 				}
@@ -201,7 +187,7 @@ public class Commands {
 	 *            脚本
 	 * @return 指令列表，至少会有一项
 	 */
-	private static List<Command> parse(String script) {
+	public static List<Command> parse(String script) {
 		List<String> cmds = split(script, ';');
 		List<Command> list = new ArrayList<Command>(cmds.size());
 		for (String command : cmds) {

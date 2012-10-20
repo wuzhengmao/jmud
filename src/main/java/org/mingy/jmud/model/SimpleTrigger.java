@@ -35,7 +35,7 @@ public class SimpleTrigger extends Trigger {
 	 * @param command
 	 *            触发后执行的脚本
 	 */
-	public SimpleTrigger(String regex, String script) {
+	SimpleTrigger(String regex, String script) {
 		super();
 		this.regex = regex;
 		this.script = script;
@@ -78,7 +78,7 @@ public class SimpleTrigger extends Trigger {
 			for (int i = 0; i < args.length; i++)
 				objs[i] = args[i];
 			((Invocable) context.JS).invokeFunction("exec", objs); */
-			Commands.execute(scope, script, args);
+			scope.executeScript(script, args);
 		} catch (Exception e) {
 			if (logger.isErrorEnabled()) {
 				logger.error("error on invoke script: " + script, e);

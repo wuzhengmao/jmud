@@ -21,7 +21,7 @@ public class ShortKey {
 	 * @param command
 	 *            命令行
 	 */
-	public ShortKey(int key, String command) {
+	ShortKey(int key, String command) {
 		this.key = key;
 		this.command = command;
 	}
@@ -68,7 +68,7 @@ public class ShortKey {
 	 * @param command
 	 *            指令
 	 */
-	public void setCommand(String command) {
+	void setCommand(String command) {
 		this.command = command;
 	}
 }

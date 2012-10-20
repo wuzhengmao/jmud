@@ -274,6 +274,9 @@ public class TelnetClient {
 								break;
 						}
 					}
+				} else if (b > 128 && b < 255) {
+					// TODO: for GBK
+					b = buffer.readByte() & 0xff;
 				} else if (b == 10) {
 					break;
 				}

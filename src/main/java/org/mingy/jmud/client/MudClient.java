@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.mingy.jmud.model.Commands;
 import org.mingy.jmud.model.Context;
 import org.mingy.jmud.model.ShortKey;
 
@@ -143,6 +142,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	public void close() {
 		if (client == null)
 			throw new IllegalStateException("no telnet client instance");
+		context.destroy();
 		client.close();
 		client = null;
 	}
@@ -150,7 +150,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	@Override
 	public void onConnected() {
 		echoForbidden = false;
-		display.syncExec(new Runnable() {
+		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				initSGR();
@@ -414,7 +414,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 			final boolean continues) {
 		if (!echoForbidden) {
 			final String line = new String(bytes, start, length, charset);
-			display.syncExec(new Runnable() {
+			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
 					show(line, null, continues);
@@ -522,7 +522,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 				commands.removeFirst();
 			cmdptr = commands.size();
 		}
-		Commands.execute(context, command, null);
+		context.executeScript(command);
 	}
 
 	@Override
@@ -531,6 +531,18 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		echo(command, SGR.ECHO);
 		if (client != null && client.isAvailable()) {
 			client.write(command.getBytes(charset));
+		}
+	}
+
+	@Override
+	public void runOnUiThread(final Runnable runnable) {
+		if (!display.isDisposed()) {
+			display.syncExec(new Runnable() {
+				@Override
+				public void run() {
+					runnable.run();
+				}
+			});
 		}
 	}
 

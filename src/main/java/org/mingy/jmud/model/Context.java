@@ -85,6 +85,13 @@ public class Context extends Scope {
 	}
 
 	/**
+	 * 销毁。
+	 */
+	public void destroy() {
+		Timers.TIMER.cancel();
+	}
+
+	/**
 	 * 使用触发器对文本进行检查。
 	 * 
 	 * @param text

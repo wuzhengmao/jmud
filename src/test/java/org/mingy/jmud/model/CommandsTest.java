@@ -13,7 +13,7 @@ public class CommandsTest {
 		context.setVariable("abC", "Test");
 		context.setVariable("b1", "Hello");
 		String command = "@@@abC我们 @b1  @b2 @@b3 @b1";
-		String result = Commands.replaceVariables(context, command);
+		String result = context.replaceCommand(command);
 		Assert.assertEquals("@Test我们 Hello   @b3 Hello", result);
 	}
 
@@ -70,5 +70,18 @@ public class CommandsTest {
 		Assert.assertNull(Command.getScopeByPath(module4, "../.."));
 		Assert.assertNull(Command.getScopeByPath(module4, "/../test"));
 		Assert.assertNull(Command.getScopeByPath(module4, "../.../test"));
+	}
+
+	@Test
+	public void testCalcExpression() throws Exception {
+		Context context = new Context();
+		context.init(null);
+		context.setVariable("i", 100);
+		context.setVariable("s", "100");
+		Assert.assertEquals(100d, (Double) context.calcExpression("null + i"));
+		Assert.assertEquals("100", (String) context.calcExpression("'' + i"));
+		Assert.assertEquals("null100",
+				(String) context.calcExpression("null + s"));
+		Assert.assertEquals("100", (String) context.calcExpression("'' + s"));
 	}
 }

@@ -47,4 +47,12 @@ public interface IMudClient {
 	 *            指令
 	 */
 	void send(String command);
+
+	/**
+	 * 在UI线程中执行。
+	 * 
+	 * @param runnable
+	 *            可执行任务
+	 */
+	void runOnUiThread(Runnable runnable);
 }

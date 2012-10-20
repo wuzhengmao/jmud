@@ -31,8 +31,9 @@ public abstract class Command {
 	 * @param scope
 	 *            上下文
 	 * @return true表示执行成功
+	 * @throws Exception
 	 */
-	public abstract boolean execute(IScope scope);
+	public abstract boolean execute(IScope scope) throws Exception;
 
 	protected static Object[] getScopeByPath(IScope scope, String path) {
 		if (path == null)

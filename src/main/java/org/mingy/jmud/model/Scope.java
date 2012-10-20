@@ -29,6 +29,7 @@ public abstract class Scope implements IScope {
 	private ScopeBindings variables;
 	private Aliases aliases;
 	private Triggers triggers;
+	private Timers timers;
 
 	Scope(String name, Scope parent) {
 		this.name = name;
@@ -38,7 +39,8 @@ public abstract class Scope implements IScope {
 				parent.getVariables()) : new ScopeBindings();
 		this.aliases = parent != null ? new Aliases(parent.getAliases())
 				: new Aliases();
-		this.triggers = new Triggers();
+		this.triggers = new Triggers(this);
+		this.timers = new Timers(this);
 	}
 
 	@Override
@@ -113,7 +115,7 @@ public abstract class Scope implements IScope {
 						+ (enabled ? "enable" : "disable") + " module: " + name);
 			}
 			this.enabled = enabled;
-			echoText("Module " + name + " is "
+			echoText("Module [" + name + "] is "
 					+ (enabled ? "enabled" : "disabled") + "\n", SGR.INFO);
 		}
 	}
@@ -142,6 +144,15 @@ public abstract class Scope implements IScope {
 		return triggers;
 	}
 
+	protected Timers getTimers() {
+		return timers;
+	}
+
+	@Override
+	public void runOnUiThread(Runnable runnable) {
+		getClient().runOnUiThread(runnable);
+	}
+
 	@Override
 	public void echoText(String text, String style) {
 		getClient().echo(text, style);
@@ -153,13 +164,50 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
+	public void executeScript(String script) {
+		for (Command cmd : Commands.parse(script)) {
+			try {
+				if (!cmd.execute(this)) {
+					if (logger.isWarnEnabled()) {
+						logger.warn("ignore: " + cmd.origin);
+					}
+					echoText("ERROR: " + cmd.origin + "\n", SGR.ERROR);
+				}
+			} catch (Exception e) {
+				if (logger.isErrorEnabled()) {
+					logger.error("error on execute: " + cmd.origin, e);
+				}
+				echoText("ERROR: " + cmd.origin + "\n", SGR.ERROR);
+			}
+		}
+	}
+
+	@Override
+	public void executeScript(String script, String[] args) {
+		if (args != null)
+			script = Commands.replaceArgs(script, args);
+		executeScript(script);
+	}
+
+	@Override
 	public Object calcExpression(String expression) throws Exception {
+		expression = replaceExpression(expression);
 		Object value = getJSEngine().eval(expression, getVariables());
 		if (logger.isDebugEnabled()) {
 			logger.debug("[" + getName() + "] CALC: " + expression + " = "
 					+ value);
 		}
 		return value;
+	}
+
+	@Override
+	public String replaceCommand(String command) {
+		return Commands.replaceVariables(this, command, false);
+	}
+
+	@Override
+	public String replaceExpression(String expression) {
+		return Commands.replaceVariables(this, expression, true);
 	}
 
 	@Override
@@ -296,15 +344,15 @@ public abstract class Scope implements IScope {
 						+ (group != null && group.length() > 0 ? " "
 								+ ("*".equals(group) ? "ALL" : group) : ""));
 			}
-			String m = this instanceof Context ? "root"
-					: ("module " + getName());
+			String m = this instanceof Context ? "ROOT" : ("module ["
+					+ getName() + "]");
 			if ("*".equals(group)) {
 				echoText("All triggers in " + m + " is "
 						+ (enabled ? "enabled" : "disabled") + "\n", SGR.INFO);
 			} else {
 				echoText(
 						(group == null || group.length() == 0 ? "Ungrouped triggers"
-								: ("Trigger group " + group))
+								: ("Trigger group [" + group) + "]")
 								+ " in "
 								+ m
 								+ " is "
@@ -324,9 +372,70 @@ public abstract class Scope implements IScope {
 		if (logger.isTraceEnabled()) {
 			logger.trace("[" + getName() + "] >>> " + line.text);
 		}
-		getTriggers().handleLine(this, line);
+		getTriggers().handleLine(line);
 		for (Scope child : getChildren()) {
 			child.handleLine(line);
 		}
+	}
+
+	@Override
+	public Timer getTimer(String name) {
+		return getTimers().get(name);
+	}
+
+	@Override
+	public Timer setTimer(String name, String script) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] TIMER[+]: " + name + " = "
+					+ script);
+		}
+		return getTimers().set(name, script);
+	}
+
+	@Override
+	public Timer removeTimer(String name) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] TIMER[-]: " + name);
+		}
+		return getTimers().remove(name);
+	}
+
+	@Override
+	public Timer resetTimer(String name, int tick) {
+		Timer timer = getTimers().reset(name, tick);
+		if (timer != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("[" + getName() + "] TIMER: set " + name
+						+ " tick to " + timer.getTick());
+			}
+			String m = this instanceof Context ? "ROOT" : ("module ["
+					+ getName() + "]");
+			echoText(
+					"Reset timer ["
+							+ name
+							+ "] in "
+							+ m
+							+ " to "
+							+ (timer.getTick() > 1000 ? (timer.getTick() / 1000.0 + "s")
+									: (timer.getTick() + "ms")) + "\n",
+					SGR.INFO);
+		}
+		return timer;
+	}
+
+	@Override
+	public Timer switchTimer(String name) {
+		Timer timer = getTimers().turn(name);
+		if (timer != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("[" + getName() + "] TIMER: turn " + name
+						+ (timer.isStart() ? " on" : " off"));
+			}
+			String m = this instanceof Context ? "ROOT" : ("module ["
+					+ getName() + "]");
+			echoText("Turn timer [" + name + "] in " + m
+					+ (timer.isStart() ? " ON" : " OFF") + "\n", SGR.INFO);
+		}
+		return timer;
 	}
 }

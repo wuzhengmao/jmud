@@ -17,6 +17,9 @@ public class Triggers {
 	/** 序列号 */
 	private static int SEQ = 0;
 
+	/** 上下文 */
+	private IScope scope;
+
 	/** 所有触发器 */
 	private Map<String, TriggerGroup> groups;
 
@@ -26,7 +29,8 @@ public class Triggers {
 	 * @param scope
 	 *            上下文
 	 */
-	public Triggers() {
+	public Triggers(IScope scope) {
+		this.scope = scope;
 		groups = new ConcurrentHashMap<String, TriggerGroup>();
 		groups.put("", new TriggerGroup());
 	}
@@ -155,7 +159,7 @@ public class Triggers {
 		}
 	}
 
-	public void handleLine(IScope scope, Line line) {
+	public void handleLine(Line line) {
 		for (TriggerGroup group : groups.values()) {
 			for (Entry<Integer, Trigger> entry : group.triggers.entrySet()) {
 				int id = entry.getKey();

@@ -9,7 +9,7 @@ package org.mingy.jmud.model;
 public class ModuleCommand extends Command {
 
 	@Override
-	public boolean execute(IScope scope) {
+	public boolean execute(IScope scope) throws Exception {
 		if (args.length != 1)
 			return false;
 		IScope target = scope.getScope(args[0]);

@@ -87,6 +87,14 @@ public interface IScope {
 	void setEnabled(boolean enabled);
 
 	/**
+	 * 在UI线程中执行。
+	 * 
+	 * @param runnable
+	 *            可执行任务
+	 */
+	void runOnUiThread(Runnable runnable);
+
+	/**
 	 * 以指定样式回显一段文本，回显的文本不会被触发。
 	 * 
 	 * @param text
@@ -105,6 +113,24 @@ public interface IScope {
 	void sendCommand(String command);
 
 	/**
+	 * 执行脚本。
+	 * 
+	 * @param script
+	 *            脚本
+	 */
+	void executeScript(String script);
+
+	/**
+	 * 执行脚本。
+	 * 
+	 * @param script
+	 *            脚本
+	 * @param args
+	 *            参数
+	 */
+	void executeScript(String script, String[] args);
+
+	/**
 	 * 计算表达式。
 	 * 
 	 * @param expression
@@ -113,6 +139,28 @@ public interface IScope {
 	 * @throws Exception
 	 */
 	Object calcExpression(String expression) throws Exception;
+
+	/**
+	 * 替换指令中的变量。
+	 * 
+	 * @param scope
+	 *            上下文
+	 * @param command
+	 *            指令
+	 * @return 替换后的指令
+	 */
+	String replaceCommand(String command);
+
+	/**
+	 * 替换表达式中的变量。
+	 * 
+	 * @param scope
+	 *            上下文
+	 * @param expression
+	 *            表达式
+	 * @return 替换后的表达式
+	 */
+	String replaceExpression(String expression);
 
 	/**
 	 * 取得变量值。
@@ -264,4 +312,55 @@ public interface IScope {
 	 * @return 如组不存在时返回false
 	 */
 	boolean setTriggerEnabled(String group, boolean enabled);
+
+	/**
+	 * 取得一个定时器。
+	 * 
+	 * @param name
+	 *            名称
+	 * @return 定时器，未找到时返回null
+	 */
+	Timer getTimer(String name);
+
+	/**
+	 * 设置一个定时器。
+	 * 
+	 * @param name
+	 *            名称
+	 * @param script
+	 *            脚本
+	 * @return 新增或修改后的定时器
+	 */
+	Timer setTimer(String name, String script);
+
+	/**
+	 * 移除一个定时器。
+	 * 
+	 * @param name
+	 *            名称
+	 * @return 移除的定时器，未找到时返回null
+	 */
+	Timer removeTimer(String name);
+
+	/**
+	 * 重置定时间隔。<br>
+	 * 如定时间隔大于0则开启，否则关闭。
+	 * 
+	 * @param name
+	 *            名称
+	 * @param tick
+	 *            定时间隔（毫秒）
+	 * @return 定时器，未找到时返回null
+	 */
+	Timer resetTimer(String name, int tick);
+
+	/**
+	 * 切换定时器开关状态。<br>
+	 * 如定时间隔不大于0时无效。
+	 * 
+	 * @param name
+	 *            名称
+	 * @return 定时器，未找到时返回null
+	 */
+	Timer switchTimer(String name);
 }

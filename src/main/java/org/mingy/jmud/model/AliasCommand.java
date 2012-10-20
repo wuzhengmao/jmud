@@ -9,7 +9,7 @@ package org.mingy.jmud.model;
 public class AliasCommand extends Command {
 
 	@Override
-	public boolean execute(IScope scope) {
+	public boolean execute(IScope scope) throws Exception {
 		if (args.length == 0 || args.length > 2)
 			return false;
 		Object[] r = getScopeByPath(scope, args[0]);

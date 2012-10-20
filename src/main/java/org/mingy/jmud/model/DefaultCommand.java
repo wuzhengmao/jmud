@@ -13,13 +13,13 @@ package org.mingy.jmud.model;
 public class DefaultCommand extends Command {
 
 	@Override
-	public boolean execute(IScope scope) {
+	public boolean execute(IScope scope) throws Exception {
 		Alias alias = scope.getAlias(args[0]);
 		if (alias != null) {
-			Commands.execute(scope, alias.getScript(), args);
+			scope.executeScript(alias.getScript(), args);
 			return true;
 		}
-		scope.sendCommand(Commands.replaceVariables(scope, origin));
+		scope.sendCommand(scope.replaceCommand(origin));
 		return true;
 	}
 }
