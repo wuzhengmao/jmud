@@ -238,6 +238,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 						cmdptr = -1;
 						commandInput.setText("");
 					}
+					commandInput.setSelection(commandInput.getText().length());
 					event.doit = false;
 					break;
 				case SWT.ARROW_DOWN:
@@ -248,6 +249,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 						cmdptr = commands.size();
 						commandInput.setText("");
 					}
+					commandInput.setSelection(commandInput.getText().length());
 					event.doit = false;
 					break;
 				}
@@ -508,8 +510,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 						logger.trace("short key command: "
 								+ shortKey.getCommand());
 					}
-					commandInput.setText(shortKey.getCommand());
-					doCommand();
+					send(shortKey.getCommand());
 					event.doit = false;
 				}
 				break;
