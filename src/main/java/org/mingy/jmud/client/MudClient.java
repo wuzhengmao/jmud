@@ -540,7 +540,8 @@ public class MudClient implements TelnetClientListener, IMudClient {
 			display.syncExec(new Runnable() {
 				@Override
 				public void run() {
-					runnable.run();
+					if (!display.isDisposed())
+						runnable.run();
 				}
 			});
 		}

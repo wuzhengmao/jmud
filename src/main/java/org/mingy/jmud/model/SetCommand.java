@@ -14,20 +14,21 @@ public class SetCommand extends Command {
 			.compile("^[A-Za-z][A-Za-z0-9_]*$");
 
 	@Override
-	public boolean execute(IScope scope) throws Exception {
-		if (args.length == 0 || args.length > 2)
+	protected boolean execute(IScope scope, String header, String[] items,
+			String[] args) throws Exception {
+		if (items.length == 0 || items.length > 2)
 			return false;
-		Object[] r = getScopeByPath(scope, args[0]);
+		Object[] r = getScopeByPath(scope, items[0]);
 		if (r == null)
 			return false;
 		IScope target = (IScope) r[0];
 		String var = (String) r[1];
 		if (!CHECK.matcher(var).matches())
 			return false;
-		if (args.length == 1) {
+		if (items.length == 1) {
 			target.removeVariable(var);
 		} else {
-			target.setVariable(var, scope.calcExpression(args[1]));
+			target.setVariable(var, scope.calcExpression(items[1]));
 		}
 		return true;
 	}

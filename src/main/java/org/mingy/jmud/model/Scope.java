@@ -165,49 +165,17 @@ public abstract class Scope implements IScope {
 
 	@Override
 	public void executeScript(String script) {
-		for (Command cmd : Commands.parse(script)) {
-			try {
-				if (!cmd.execute(this)) {
-					if (logger.isWarnEnabled()) {
-						logger.warn("ignore: " + cmd.origin);
-					}
-					echoText("ERROR: " + cmd.origin + "\n", SGR.ERROR);
-				}
-			} catch (Exception e) {
-				if (logger.isErrorEnabled()) {
-					logger.error("error on execute: " + cmd.origin, e);
-				}
-				echoText("ERROR: " + cmd.origin + "\n", SGR.ERROR);
-			}
-		}
+		executeScript(script, null);
 	}
 
 	@Override
 	public void executeScript(String script, String[] args) {
-		if (args != null)
-			script = Commands.replaceArgs(script, args);
-		executeScript(script);
+		new Script(script).execute(this, args);
 	}
 
 	@Override
 	public Object calcExpression(String expression) throws Exception {
-		expression = replaceExpression(expression);
-		Object value = getJSEngine().eval(expression, getVariables());
-		if (logger.isDebugEnabled()) {
-			logger.debug("[" + getName() + "] CALC: " + expression + " = "
-					+ value);
-		}
-		return value;
-	}
-
-	@Override
-	public String replaceCommand(String command) {
-		return Commands.replaceVariables(this, command, false);
-	}
-
-	@Override
-	public String replaceExpression(String expression) {
-		return Commands.replaceVariables(this, expression, true);
+		return new Expression(expression).compute(this);
 	}
 
 	@Override
@@ -259,6 +227,15 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
+	public Alias setAlias(String name, IExecution execution) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] ALIAS[+]: " + name + " = "
+					+ execution);
+		}
+		return getAliases().set(name, execution);
+	}
+
+	@Override
 	public Alias setAlias(String name, String script) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("[" + getName() + "] ALIAS[+]: " + name + " = "
@@ -293,6 +270,21 @@ public abstract class Scope implements IScope {
 			}
 		}
 		return b;
+	}
+
+	@Override
+	public Trigger addTrigger(String group, String regex, IExecution execution) {
+		Trigger trigger = getTriggers().add(group, regex, execution);
+		if (trigger != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("["
+						+ getName()
+						+ "] TRIGGER[+]: "
+						+ (group != null && group.length() > 0 ? "(" + group
+								+ ") " : "") + trigger);
+			}
+		}
+		return trigger;
 	}
 
 	@Override
@@ -381,6 +373,15 @@ public abstract class Scope implements IScope {
 	@Override
 	public Timer getTimer(String name) {
 		return getTimers().get(name);
+	}
+
+	@Override
+	public Timer setTimer(String name, IExecution execution) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] TIMER[+]: " + name + " = "
+					+ execution);
+		}
+		return getTimers().set(name, execution);
 	}
 
 	@Override

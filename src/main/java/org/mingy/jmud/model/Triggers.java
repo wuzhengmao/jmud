@@ -82,16 +82,31 @@ public class Triggers {
 	 *            组名
 	 * @param regex
 	 *            正则表达式
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增的触发器
+	 */
+	public Trigger add(String group, String regex, IExecution execution) {
+		if (group == null)
+			group = "";
+		Trigger trigger = new SimpleTrigger(regex, execution);
+		add(group, trigger);
+		return trigger;
+	}
+
+	/**
+	 * 添加一个简单的触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param regex
+	 *            正则表达式
 	 * @param script
 	 *            脚本
 	 * @return 新增的触发器
 	 */
 	public Trigger add(String group, String regex, String script) {
-		if (group == null)
-			group = "";
-		Trigger trigger = new SimpleTrigger(regex, script);
-		add(group, trigger);
-		return trigger;
+		return add(group, regex, new Script(script));
 	}
 
 	/**
@@ -178,7 +193,9 @@ public class Triggers {
 					String[] args = trigger.match(line, pos != null ? pos : 0);
 					if (args != null) {
 						line.ptrs.put(id, line.text.length());
-						trigger.execute(scope, args);
+						IExecution execution = trigger.getExecution();
+						if (execution != null)
+							execution.execute(scope, args);
 					}
 				} else {
 					line.ptrs.put(id, line.text.length());

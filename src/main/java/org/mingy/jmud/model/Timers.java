@@ -52,6 +52,26 @@ public class Timers {
 	 * 
 	 * @param name
 	 *            名称
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增或修改后的定时器
+	 */
+	public Timer set(String name, IExecution execution) {
+		Timer timer = ALL.get(name);
+		if (timer != null) {
+			timer.setExecution(execution);
+		} else {
+			timer = new Timer(name, execution);
+			ALL.put(name, timer);
+		}
+		return timer;
+	}
+
+	/**
+	 * 设置一个定时器。
+	 * 
+	 * @param name
+	 *            名称
 	 * @param script
 	 *            脚本
 	 * @return 新增或修改后的定时器
@@ -59,9 +79,14 @@ public class Timers {
 	public Timer set(String name, String script) {
 		Timer timer = ALL.get(name);
 		if (timer != null) {
-			timer.setScript(script);
+			IExecution execution = timer.getExecution();
+			if (execution instanceof Script) {
+				((Script) execution).setContent(script);
+			} else {
+				timer.setExecution(new Script(script));
+			}
 		} else {
-			timer = new Timer(name, script);
+			timer = new Timer(name, new Script(script));
 			ALL.put(name, timer);
 		}
 		return timer;
@@ -142,7 +167,9 @@ public class Timers {
 			scope.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					scope.executeScript(timer.getScript());
+					IExecution execution = timer.getExecution();
+					if (execution != null)
+						execution.execute(scope, null);
 				}
 			});
 		}

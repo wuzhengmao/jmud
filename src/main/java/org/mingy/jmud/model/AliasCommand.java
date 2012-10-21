@@ -9,18 +9,19 @@ package org.mingy.jmud.model;
 public class AliasCommand extends Command {
 
 	@Override
-	public boolean execute(IScope scope) throws Exception {
-		if (args.length == 0 || args.length > 2)
+	protected boolean execute(IScope scope, String header, String[] items,
+			String[] args) throws Exception {
+		if (items.length == 0 || items.length > 2)
 			return false;
-		Object[] r = getScopeByPath(scope, args[0]);
+		Object[] r = getScopeByPath(scope, items[0]);
 		if (r == null)
 			return false;
 		IScope target = (IScope) r[0];
 		String name = (String) r[1];
-		if (args.length == 1) {
+		if (items.length == 1) {
 			target.removeAlias(name);
 		} else {
-			target.setAlias(name, args[1]);
+			target.setAlias(name, items[1]);
 		}
 		return true;
 	}

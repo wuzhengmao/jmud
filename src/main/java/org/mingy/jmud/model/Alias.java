@@ -10,20 +10,21 @@ public class Alias {
 
 	/** 别名 */
 	private String name;
-	/** 脚本 */
-	private String script;
+
+	/** 执行逻辑 */
+	private IExecution execution;
 
 	/**
 	 * 构造器。
 	 * 
 	 * @param name
 	 *            别名
-	 * @param script
-	 *            脚本
+	 * @param execution
+	 *            执行逻辑
 	 */
-	Alias(String name, String script) {
+	Alias(String name, IExecution execution) {
 		this.name = name;
-		this.script = script;
+		this.execution = execution;
 	}
 
 	/**
@@ -36,21 +37,26 @@ public class Alias {
 	}
 
 	/**
-	 * 返回脚本
+	 * 返回执行逻辑。
 	 * 
-	 * @return 脚本
+	 * @return 执行逻辑
 	 */
-	public String getScript() {
-		return script;
+	public IExecution getExecution() {
+		return execution;
 	}
 
 	/**
-	 * 设置脚本。
+	 * 设置执行逻辑。
 	 * 
-	 * @param script
-	 *            脚本
+	 * @param execution
+	 *            执行逻辑
 	 */
-	void setScript(String script) {
-		this.script = script;
+	public void setExecution(IExecution execution) {
+		this.execution = execution;
+	}
+
+	@Override
+	public String toString() {
+		return "Alias [name=" + name + ", execution=" + execution + "]";
 	}
 }

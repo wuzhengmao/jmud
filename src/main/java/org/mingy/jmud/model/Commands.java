@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,11 +47,26 @@ public abstract class Commands {
 	 *            上下文
 	 * @param command
 	 *            指令
-	 * @param isExpression
-	 *            是否为表达式
 	 * @return 替换后的指令
 	 */
-	public static String replaceVariables(IScope scope, String command,
+	public static String replaceCommand(IScope scope, String command) {
+		return replaceVariables(scope, command, false);
+	}
+
+	/**
+	 * 替换表达式中的变量。
+	 * 
+	 * @param scope
+	 *            上下文
+	 * @param expression
+	 *            表达式
+	 * @return 替换后的表达式
+	 */
+	public static String replaceExpression(IScope scope, String expression) {
+		return replaceVariables(scope, expression, true);
+	}
+
+	private static String replaceVariables(IScope scope, String command,
 			boolean isExpression) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("before: " + command);
@@ -188,7 +205,7 @@ public abstract class Commands {
 	 * @return 指令列表，至少会有一项
 	 */
 	public static List<Command> parse(String script) {
-		List<String> cmds = split(script, ';');
+		List<String> cmds = split(script);
 		List<Command> list = new ArrayList<Command>(cmds.size());
 		for (String command : cmds) {
 			list.add(parseCmd(command));
@@ -198,8 +215,11 @@ public abstract class Commands {
 
 	private static Command parseCmd(String command) {
 		Command cmd = null;
-		List<String> list = split(command, ' ');
-		String s = list.get(0);
+		List<int[]> results = preSplit(command, ' ');
+		int[] r = results.get(0);
+		command = command.substring(r[0], r[1]);
+		r = results.get(1);
+		String s = command.substring(r[0], r[1]);
 		if (!s.isEmpty() && s.charAt(0) == '#') {
 			Class<? extends Command> clz = TYPES.get(s);
 			if (clz == null) {
@@ -209,10 +229,9 @@ public abstract class Commands {
 			} else {
 				try {
 					cmd = clz.newInstance();
-					cmd.header = s;
-					cmd.args = new String[list.size() - 1];
-					for (int i = 0; i < cmd.args.length; i++)
-						cmd.args[i] = list.get(i + 1);
+					cmd.splits = new int[results.size() - 1][];
+					for (int i = 0; i < cmd.splits.length; i++)
+						cmd.splits[i] = results.get(i + 1);
 				} catch (Exception e) {
 					if (logger.isErrorEnabled()) {
 						logger.error("error on new instance: " + clz.getName(),
@@ -223,9 +242,10 @@ public abstract class Commands {
 		}
 		if (cmd == null) {
 			cmd = new DefaultCommand();
-			cmd.args = new String[list.size()];
-			for (int i = 0; i < cmd.args.length; i++)
-				cmd.args[i] = list.get(i);
+			cmd.splits = new int[results.size()][];
+			cmd.splits[0] = new int[] { 0, command.length() };
+			for (int i = 1; i < cmd.splits.length; i++)
+				cmd.splits[i] = results.get(i);
 		}
 		cmd.origin = command;
 		if (logger.isTraceEnabled()) {
@@ -234,20 +254,45 @@ public abstract class Commands {
 		return cmd;
 	}
 
-	private static List<String> split(String command, char ch) {
-		if (command.length() > 1 && command.charAt(0) == '{'
-				&& command.charAt(command.length() - 1) == '}')
-			command = command.substring(1, command.length() - 1);
-		List<String> cmds = new ArrayList<String>();
+	private static List<String> split(String command) {
+		List<int[]> results = preSplit(command, ';');
+		List<String> cmds = new ArrayList<String>(results.size() - 1);
+		for (int i = 0; i < results.size(); i++) {
+			int[] r = results.get(i);
+			if (i > 0)
+				cmds.add(command.substring(r[0], r[1]));
+			else
+				command = command.substring(r[0], r[1]);
+		}
+		return cmds;
+	}
+
+	private static final Pattern PATTERN = Pattern
+			.compile("^\\s*\\{\\s*(.*)\\s*\\}\\s*$");
+
+	/**
+	 * 预先将指令进行分割。
+	 * 
+	 * @param command
+	 *            指令
+	 * @param ch
+	 *            分隔字符
+	 * @return 返回列表的的第一个数组为输入指令的有效起始和结束位置，之后顺序为每个分隔段相对于输入指令有效位置的起始和结束位置，列表至少含两项
+	 */
+	public static List<int[]> preSplit(String command, char ch) {
+		List<int[]> results = new ArrayList<int[]>();
+		int[] all = match(command, 0, command.length());
+		results.add(all);
+		command = command.substring(all[0], all[1]);
 		int p = 0;
 		int k = 0;
 		for (int i = 0; i < command.length(); i++) {
 			char b = command.charAt(i);
 			if (k == 0 && b == ch) {
 				if (i > p) {
-					String cmd = command.substring(p, i).trim();
-					if (!cmd.isEmpty())
-						cmds.add(cmd);
+					int[] r = match(command, p, i);
+					if (r[1] > r[0])
+						results.add(r);
 				}
 				p = i + 1;
 			} else if (b == '{') {
@@ -258,15 +303,25 @@ public abstract class Commands {
 			}
 		}
 		if (p < command.length()) {
-			String cmd = command.substring(p).trim();
-			if (cmd.length() > 1 && cmd.charAt(0) == '{'
-					&& cmd.charAt(cmd.length() - 1) == '}')
-				cmd = cmd.substring(1, cmd.length() - 1);
-			if (!cmd.isEmpty())
-				cmds.add(cmd);
+			int[] r = match(command, p, command.length());
+			if (r[1] > r[0])
+				results.add(r);
 		}
-		if (cmds.isEmpty())
-			cmds.add("");
-		return cmds;
+		if (results.size() == 1)
+			results.add(new int[] { 0, command.length() });
+		return results;
+	}
+
+	private static int[] match(String command, int start, int end) {
+		int[] all = new int[2];
+		Matcher m = PATTERN.matcher(command.substring(start, end));
+		if (m.find()) {
+			all[0] = m.start(1) + start;
+			all[1] = m.end(1) + start;
+		} else {
+			all[0] = start;
+			all[1] = end;
+		}
+		return all;
 	}
 }

@@ -13,7 +13,7 @@ public class CommandsTest {
 		context.setVariable("abC", "Test");
 		context.setVariable("b1", "Hello");
 		String command = "@@@abC我们 @b1  @b2 @@b3 @b1";
-		String result = context.replaceCommand(command);
+		String result = Commands.replaceCommand(context, command);
 		Assert.assertEquals("@Test我们 Hello   @b3 Hello", result);
 	}
 

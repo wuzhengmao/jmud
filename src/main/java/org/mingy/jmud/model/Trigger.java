@@ -10,6 +10,19 @@ import org.mingy.jmud.model.Triggers.Line;
  */
 public abstract class Trigger {
 
+	/** 执行逻辑 */
+	private IExecution execution;
+
+	/**
+	 * 构造器。
+	 * 
+	 * @param execution
+	 *            执行逻辑
+	 */
+	Trigger(IExecution execution) {
+		this.execution = execution;
+	}
+
 	/**
 	 * 触发器要求的文本行数。
 	 * 
@@ -31,12 +44,21 @@ public abstract class Trigger {
 	public abstract String[] match(Line line, int start);
 
 	/**
-	 * 执行一系列指令。
+	 * 返回执行逻辑。
 	 * 
-	 * @param scope
-	 *            上下文
-	 * @param args
-	 *            匹配成功的参数，始终不为null
+	 * @return 执行逻辑
 	 */
-	public abstract void execute(IScope scope, String[] args);
+	public IExecution getExecution() {
+		return execution;
+	}
+
+	/**
+	 * 设置执行逻辑。
+	 * 
+	 * @param execution
+	 *            执行逻辑
+	 */
+	public void setExecution(IExecution execution) {
+		this.execution = execution;
+	}
 }

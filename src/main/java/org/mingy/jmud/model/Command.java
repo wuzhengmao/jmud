@@ -1,7 +1,5 @@
 package org.mingy.jmud.model;
 
-import java.util.Arrays;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -19,21 +17,51 @@ public abstract class Command {
 	/** 原始指令 */
 	protected String origin;
 
-	/** 指令头 */
-	protected String header;
-
-	/** 参数 */
-	protected String[] args;
+	/** 分割位置 */
+	protected int[][] splits;
 
 	/**
 	 * 执行指令。
 	 * 
 	 * @param scope
 	 *            上下文
+	 * @param args
+	 *            参数
 	 * @return true表示执行成功
 	 * @throws Exception
 	 */
-	public abstract boolean execute(IScope scope) throws Exception;
+	public boolean execute(IScope scope, String[] args) throws Exception {
+		String header = null;
+		String[] items = new String[splits.length - 1];
+		for (int i = 0; i < splits.length; i++) {
+			int[] r = splits[i];
+			if (i == 0) {
+				header = origin.substring(r[0], r[1]);
+			} else {
+				items[i - 1] = origin.substring(r[0], r[1]);
+				if (args != null && args.length > 0)
+					items[i - 1] = Commands.replaceArgs(items[i - 1], args);
+			}
+		}
+		return execute(scope, header, items, args);
+	}
+
+	/**
+	 * 执行指令。
+	 * 
+	 * @param scope
+	 *            上下文
+	 * @param header
+	 *            指令头
+	 * @param items
+	 *            指令项
+	 * @param args
+	 *            参数
+	 * @return true表示执行成功
+	 * @throws Exception
+	 */
+	protected abstract boolean execute(IScope scope, String header,
+			String[] items, String[] args) throws Exception;
 
 	protected static Object[] getScopeByPath(IScope scope, String path) {
 		if (path == null)
@@ -105,7 +133,14 @@ public abstract class Command {
 
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + " [header=" + header
-				+ ", args=" + Arrays.toString(args) + "]";
+		StringBuilder sb = new StringBuilder(getClass().getSimpleName())
+				.append(" [origin=").append(origin).append(", splits=[");
+		for (int i = 0; i < splits.length; i++) {
+			if (i > 0)
+				sb.append(", ");
+			int[] r = splits[i];
+			sb.append(r[0]).append("-").append(r[1]);
+		}
+		return sb.append("]]").toString();
 	}
 }

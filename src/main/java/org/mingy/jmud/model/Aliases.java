@@ -54,6 +54,26 @@ public class Aliases {
 	 * 
 	 * @param name
 	 *            别名
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增或修改后的别名
+	 */
+	public Alias set(String name, IExecution execution) {
+		Alias alias = ALL.get(name);
+		if (alias != null) {
+			alias.setExecution(execution);
+		} else {
+			alias = new Alias(name, execution);
+			ALL.put(name, alias);
+		}
+		return alias;
+	}
+
+	/**
+	 * 设置一个别名。
+	 * 
+	 * @param name
+	 *            别名
 	 * @param script
 	 *            脚本
 	 * @return 新增或修改后的别名
@@ -61,9 +81,14 @@ public class Aliases {
 	public Alias set(String name, String script) {
 		Alias alias = ALL.get(name);
 		if (alias != null) {
-			alias.setScript(script);
+			IExecution execution = alias.getExecution();
+			if (execution instanceof Script) {
+				((Script) execution).setContent(script);
+			} else {
+				alias.setExecution(new Script(script));
+			}
 		} else {
-			alias = new Alias(name, script);
+			alias = new Alias(name, new Script(script));
 			ALL.put(name, alias);
 		}
 		return alias;

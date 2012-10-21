@@ -9,10 +9,11 @@ package org.mingy.jmud.model;
 public class ModuleCommand extends Command {
 
 	@Override
-	public boolean execute(IScope scope) throws Exception {
-		if (args.length != 1)
+	protected boolean execute(IScope scope, String header, String[] items,
+			String[] args) throws Exception {
+		if (items.length != 1)
 			return false;
-		IScope target = scope.getScope(args[0]);
+		IScope target = scope.getScope(items[0]);
 		if (target == null)
 			return false;
 		if ("#m+".equals(header)) {

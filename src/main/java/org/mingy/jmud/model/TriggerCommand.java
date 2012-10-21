@@ -9,10 +9,11 @@ package org.mingy.jmud.model;
 public class TriggerCommand extends Command {
 
 	@Override
-	public boolean execute(IScope scope) throws Exception {
-		if (args.length > 1)
+	protected boolean execute(IScope scope, String header, String[] items,
+			String[] args) throws Exception {
+		if (items.length > 1)
 			return false;
-		Object[] r = getScopeByPath(scope, args.length > 0 ? args[0] : "");
+		Object[] r = getScopeByPath(scope, items.length > 0 ? items[0] : "");
 		if (r == null)
 			return false;
 		IScope target = (IScope) r[0];

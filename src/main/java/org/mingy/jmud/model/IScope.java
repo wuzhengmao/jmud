@@ -141,28 +141,6 @@ public interface IScope {
 	Object calcExpression(String expression) throws Exception;
 
 	/**
-	 * 替换指令中的变量。
-	 * 
-	 * @param scope
-	 *            上下文
-	 * @param command
-	 *            指令
-	 * @return 替换后的指令
-	 */
-	String replaceCommand(String command);
-
-	/**
-	 * 替换表达式中的变量。
-	 * 
-	 * @param scope
-	 *            上下文
-	 * @param expression
-	 *            表达式
-	 * @return 替换后的表达式
-	 */
-	String replaceExpression(String expression);
-
-	/**
 	 * 取得变量值。
 	 * 
 	 * @param name
@@ -234,6 +212,17 @@ public interface IScope {
 	 * 
 	 * @param name
 	 *            别名
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增或修改后的别名
+	 */
+	Alias setAlias(String name, IExecution execution);
+
+	/**
+	 * 设置一个别名。
+	 * 
+	 * @param name
+	 *            别名
 	 * @param script
 	 *            脚本
 	 * @return 新增或修改后的别名
@@ -268,6 +257,19 @@ public interface IScope {
 	 * @return true表示添加成功，如该触发器已存在则返回false
 	 */
 	boolean addTrigger(String group, Trigger trigger);
+
+	/**
+	 * 添加一个简单的触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param regex
+	 *            正则表达式
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增的触发器
+	 */
+	Trigger addTrigger(String group, String regex, IExecution execution);
 
 	/**
 	 * 添加一个简单的触发器。
@@ -321,6 +323,17 @@ public interface IScope {
 	 * @return 定时器，未找到时返回null
 	 */
 	Timer getTimer(String name);
+
+	/**
+	 * 设置一个定时器。
+	 * 
+	 * @param name
+	 *            名称
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增或修改后的定时器
+	 */
+	Timer setTimer(String name, IExecution execution);
 
 	/**
 	 * 设置一个定时器。

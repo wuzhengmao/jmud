@@ -13,15 +13,15 @@ public class Timer {
 	/** 名称 */
 	private String name;
 
-	/** 脚本 */
-	private String script;
+	/** 执行逻辑 */
+	private IExecution execution;
 
 	/** 时间间隔（毫秒） */
 	private int tick;
 
 	/** 是否启动 */
 	private boolean start;
-	
+
 	/** 定时任务 */
 	Task task;
 
@@ -30,12 +30,12 @@ public class Timer {
 	 * 
 	 * @param name
 	 *            名称
-	 * @param script
-	 *            脚本
+	 * @param execution
+	 *            执行逻辑
 	 */
-	Timer(String name, String script) {
+	Timer(String name, IExecution execution) {
 		this.name = name;
-		this.script = script;
+		this.execution = execution;
 	}
 
 	/**
@@ -48,22 +48,22 @@ public class Timer {
 	}
 
 	/**
-	 * 返回脚本。
+	 * 返回执行逻辑。
 	 * 
-	 * @return 脚本
+	 * @return 执行逻辑
 	 */
-	public String getScript() {
-		return script;
+	public IExecution getExecution() {
+		return execution;
 	}
 
 	/**
-	 * 设置脚本。
+	 * 设置执行逻辑。
 	 * 
-	 * @param script
-	 *            脚本
+	 * @param execution
+	 *            执行逻辑
 	 */
-	void setScript(String script) {
-		this.script = script;
+	public void setExecution(IExecution execution) {
+		this.execution = execution;
 	}
 
 	/**
@@ -102,5 +102,11 @@ public class Timer {
 	 */
 	void setStart(boolean start) {
 		this.start = start;
+	}
+
+	@Override
+	public String toString() {
+		return "Timer [name=" + name + ", execution=" + execution + ", tick="
+				+ tick + ", start=" + start + "]";
 	}
 }
