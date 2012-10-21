@@ -121,12 +121,14 @@ public interface IScope {
 	void runOnInputThread(Runnable runnable);
 
 	/**
-	 * 执行脚本。
+	 * 执行一段逻辑。
 	 * 
-	 * @param script
-	 *            脚本
+	 * @param execution
+	 *            执行逻辑
+	 * @param args
+	 *            参数
 	 */
-	void executeScript(String script);
+	void execute(IExecution execution, String[] args);
 
 	/**
 	 * 执行脚本。

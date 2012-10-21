@@ -159,16 +159,6 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public void executeScript(String script) {
-		executeScript(script, null);
-	}
-
-	@Override
-	public void executeScript(String script, String[] args) {
-		new Script(script).execute(this, args);
-	}
-
-	@Override
 	public void runOnWorkThread(Runnable runnable) {
 		getContext().runOnWorkThread(runnable);
 	}
@@ -176,6 +166,20 @@ public abstract class Scope implements IScope {
 	@Override
 	public void runOnInputThread(Runnable runnable) {
 		getContext().runOnInputThread(runnable);
+	}
+
+	@Override
+	public void execute(IExecution execution, String[] args) {
+		try {
+			execution.execute(this, args);
+		} catch (InterruptExecutionException e) {
+			// ignore
+		}
+	}
+
+	@Override
+	public void executeScript(String script, String[] args) {
+		execute(new Script(script), args);
 	}
 
 	@Override

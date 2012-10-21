@@ -46,6 +46,8 @@ public class Script implements IExecution {
 					scope.echoText("ERROR: " + cmd.origin + "\n", SGR.ERROR);
 				}
 			} catch (Exception e) {
+				if (e instanceof InterruptExecutionException)
+					throw (InterruptExecutionException) e;
 				if (logger.isErrorEnabled()) {
 					logger.error("error on execute: " + cmd.origin, e);
 				}

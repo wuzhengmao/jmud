@@ -552,7 +552,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		context.runOnInputThread(new Runnable() {
 			@Override
 			public void run() {
-				context.executeScript(command);
+				context.executeScript(command, null);
 			}
 		});
 	}

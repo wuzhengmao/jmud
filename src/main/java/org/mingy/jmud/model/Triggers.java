@@ -199,7 +199,7 @@ public class Triggers {
 							scope.runOnWorkThread(new Runnable() {
 								@Override
 								public void run() {
-									execution.execute(scope, args);
+									scope.execute(execution, args);
 								}
 							});
 						}

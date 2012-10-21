@@ -169,7 +169,7 @@ public class Timers {
 				scope.runOnWorkThread(new Runnable() {
 					@Override
 					public void run() {
-						execution.execute(scope, null);
+						scope.execute(execution, null);
 					}
 				});
 			}

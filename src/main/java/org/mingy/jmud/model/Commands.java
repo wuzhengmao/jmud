@@ -40,6 +40,7 @@ public abstract class Commands {
 		TYPES.put("#tset", TimerCommand.class);
 		TYPES.put("#wa", WaitCommand.class);
 		TYPES.put("#wait", WaitCommand.class);
+		TYPES.put("#return", ReturnCommand.class);
 	}
 
 	/**
