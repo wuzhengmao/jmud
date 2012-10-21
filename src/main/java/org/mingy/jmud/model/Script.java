@@ -35,7 +35,7 @@ public class Script implements IExecution {
 
 	@Override
 	public void execute(IScope scope, String[] args) {
-		if (commands == null)
+		if (commands == null || commands.isEmpty())
 			return;
 		for (Command cmd : commands) {
 			try {

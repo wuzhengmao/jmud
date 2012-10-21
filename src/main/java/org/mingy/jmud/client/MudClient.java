@@ -129,6 +129,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		this.commandInput = commandInput;
 		this.context = context;
 		init();
+		initSGR();
 	}
 
 	@Override
@@ -150,13 +151,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	@Override
 	public void onConnected() {
 		echoForbidden = false;
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				initSGR();
-				echo("Connected to " + hostname + ":" + port + "\n", SGR.INFO);
-			}
-		});
+		echo("Connected to " + hostname + ":" + port + "\n", SGR.INFO);
 	}
 
 	@Override
@@ -411,27 +406,37 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	}
 
 	private void appendLine(byte[] bytes, int start, int length,
-			final boolean continues) {
+			boolean continues) {
 		if (!echoForbidden) {
-			final String line = new String(bytes, start, length, charset);
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					show(line, null, continues);
-				}
-			});
+			String line = new String(bytes, start, length, charset);
+			show(line, null, continues);
 		}
 	}
 
 	@Override
-	public void show(String text, String style, boolean continues) {
-		if (text != null && text.length() > 0)
-			echo(text, style);
-		context.handleText(text, !continues);
+	public void show(final String text, final String style,
+			final boolean continues) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				if (text != null && text.length() > 0)
+					doEcho(text, style);
+				context.handleText(text, !continues);
+			}
+		});
 	}
 
 	@Override
-	public void echo(String text, String style) {
+	public void echo(final String text, final String style) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				doEcho(text, style);
+			}
+		});
+	}
+
+	private void doEcho(String text, String style) {
 		SGR sgr = style != null ? new SGR(style, defaultSGR) : currentSGR;
 		int[] textColor = sgr.getTextColor();
 		int[] bgColor = sgr.getBackgroundColor();
@@ -513,7 +518,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	}
 
 	private void doCommand() {
-		String command = commandInput.getText();
+		final String command = commandInput.getText();
 		if (command != null && command.length() > 0
 				&& (commands.isEmpty() || !command.equals(commands.getLast()))) {
 			commandInput.selectAll();
@@ -522,7 +527,12 @@ public class MudClient implements TelnetClientListener, IMudClient {
 				commands.removeFirst();
 			cmdptr = commands.size();
 		}
-		context.executeScript(command);
+		context.runOnInputThread(new Runnable() {
+			@Override
+			public void run() {
+				context.executeScript(command);
+			}
+		});
 	}
 
 	@Override
@@ -536,11 +546,11 @@ public class MudClient implements TelnetClientListener, IMudClient {
 
 	@Override
 	public void runOnUiThread(final Runnable runnable) {
-		if (!display.isDisposed()) {
+		if (client != null && !display.isDisposed()) {
 			display.syncExec(new Runnable() {
 				@Override
 				public void run() {
-					if (!display.isDisposed())
+					if (client != null && !display.isDisposed())
 						runnable.run();
 				}
 			});

@@ -190,12 +190,19 @@ public class Triggers {
 				}
 				if (group.enabled) {
 					Integer pos = line.ptrs.get(id);
-					String[] args = trigger.match(line, pos != null ? pos : 0);
+					final String[] args = trigger.match(line, pos != null ? pos
+							: 0);
 					if (args != null) {
 						line.ptrs.put(id, line.text.length());
-						IExecution execution = trigger.getExecution();
-						if (execution != null)
-							execution.execute(scope, args);
+						final IExecution execution = trigger.getExecution();
+						if (execution != null) {
+							scope.runOnWorkThread(new Runnable() {
+								@Override
+								public void run() {
+									execution.execute(scope, args);
+								}
+							});
+						}
 					}
 				} else {
 					line.ptrs.put(id, line.text.length());

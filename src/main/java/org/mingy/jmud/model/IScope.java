@@ -87,14 +87,6 @@ public interface IScope {
 	void setEnabled(boolean enabled);
 
 	/**
-	 * 在UI线程中执行。
-	 * 
-	 * @param runnable
-	 *            可执行任务
-	 */
-	void runOnUiThread(Runnable runnable);
-
-	/**
 	 * 以指定样式回显一段文本，回显的文本不会被触发。
 	 * 
 	 * @param text
@@ -111,6 +103,22 @@ public interface IScope {
 	 *            指令
 	 */
 	void sendCommand(String command);
+
+	/**
+	 * 在工作线程中执行。
+	 * 
+	 * @param runnable
+	 *            可执行任务
+	 */
+	void runOnWorkThread(Runnable runnable);
+
+	/**
+	 * 在输入线程中执行。
+	 * 
+	 * @param runnable
+	 *            可执行任务
+	 */
+	void runOnInputThread(Runnable runnable);
 
 	/**
 	 * 执行脚本。

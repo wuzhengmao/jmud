@@ -20,7 +20,7 @@ public class Configurations extends Context {
 		setVariable("i", "hello");
 		addTrigger(null, "^您的英文名字（要注册新人物请输入new）：", "kscs");
 		addTrigger(null, "此ID档案已存在，请输入密码：", "zxc123");
-		setTimer("ok", "hi @i");
+		setTimer("ok", "hi @i;#wa 1500;l @i");
 		Scope module = addChild("m");
 		module.addTrigger(
 				null,

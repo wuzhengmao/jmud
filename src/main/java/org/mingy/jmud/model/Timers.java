@@ -164,14 +164,15 @@ public class Timers {
 
 		@Override
 		public void run() {
-			scope.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					IExecution execution = timer.getExecution();
-					if (execution != null)
+			final IExecution execution = timer.getExecution();
+			if (execution != null) {
+				scope.runOnWorkThread(new Runnable() {
+					@Override
+					public void run() {
 						execution.execute(scope, null);
-				}
-			});
+					}
+				});
+			}
 		}
 	}
 }

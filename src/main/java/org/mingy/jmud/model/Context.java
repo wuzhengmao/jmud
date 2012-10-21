@@ -1,5 +1,8 @@
 package org.mingy.jmud.model;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -17,6 +20,10 @@ public class Context extends Scope {
 
 	/** 为触发器处理保留的最大行数 */
 	private static final int MAX_LINES = 10;
+	/** 最大的工作线程数 */
+	private static final int MAX_WORK_THREADS = 20;
+	/** 最大的输入线程数 */
+	private static final int MAX_INPUT_THREADS = 3;
 
 	/** MUD客户端 */
 	private IMudClient client;
@@ -26,6 +33,10 @@ public class Context extends Scope {
 	private ShortKeys shortKeys;
 	/** 最后处理行 */
 	private Line last;
+	/** 工作线程池 */
+	private ExecutorService workThreadPool;
+	/** 输入线程池 */
+	private ExecutorService inputThreadPool;
 
 	public Context() {
 		super("root", null);
@@ -82,6 +93,8 @@ public class Context extends Scope {
 		} catch (ScriptException e) {
 			throw new RuntimeException(e);
 		}
+		workThreadPool = Executors.newFixedThreadPool(MAX_WORK_THREADS);
+		inputThreadPool = Executors.newFixedThreadPool(MAX_INPUT_THREADS);
 	}
 
 	/**
@@ -89,6 +102,8 @@ public class Context extends Scope {
 	 */
 	public void destroy() {
 		Timers.TIMER.cancel();
+		workThreadPool.shutdownNow();
+		inputThreadPool.shutdownNow();
 	}
 
 	/**
@@ -122,5 +137,15 @@ public class Context extends Scope {
 			line.next.prev = null;
 			line.next = null;
 		}
+	}
+
+	@Override
+	public void runOnWorkThread(Runnable runnable) {
+		workThreadPool.execute(runnable);
+	}
+
+	@Override
+	public void runOnInputThread(Runnable runnable) {
+		inputThreadPool.execute(runnable);
 	}
 }

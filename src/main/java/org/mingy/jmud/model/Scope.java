@@ -149,11 +149,6 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public void runOnUiThread(Runnable runnable) {
-		getClient().runOnUiThread(runnable);
-	}
-
-	@Override
 	public void echoText(String text, String style) {
 		getClient().echo(text, style);
 	}
@@ -171,6 +166,16 @@ public abstract class Scope implements IScope {
 	@Override
 	public void executeScript(String script, String[] args) {
 		new Script(script).execute(this, args);
+	}
+
+	@Override
+	public void runOnWorkThread(Runnable runnable) {
+		getContext().runOnWorkThread(runnable);
+	}
+
+	@Override
+	public void runOnInputThread(Runnable runnable) {
+		getContext().runOnInputThread(runnable);
 	}
 
 	@Override
@@ -417,8 +422,8 @@ public abstract class Scope implements IScope {
 							+ "] in "
 							+ m
 							+ " to "
-							+ (timer.getTick() > 1000 ? (timer.getTick() / 1000.0 + "s")
-									: (timer.getTick() + "ms")) + "\n",
+							+ (timer.getTick() < 1000 ? (timer.getTick() + "ms")
+									: (timer.getTick() / 1000.0 + "s")) + "\n",
 					SGR.INFO);
 		}
 		return timer;

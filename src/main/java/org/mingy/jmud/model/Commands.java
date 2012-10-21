@@ -38,6 +38,8 @@ public abstract class Commands {
 		TYPES.put("#timer", TimerCommand.class);
 		TYPES.put("#ts", TimerCommand.class);
 		TYPES.put("#tset", TimerCommand.class);
+		TYPES.put("#wa", WaitCommand.class);
+		TYPES.put("#wait", WaitCommand.class);
 	}
 
 	/**

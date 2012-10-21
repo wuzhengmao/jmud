@@ -326,6 +326,11 @@ public class TelnetClient {
 			if (logger.isInfoEnabled()) {
 				logger.info("lost connection of " + hostname + ":" + port);
 			}
+			if (writeFuture != null) {
+				if (!writeFuture.isDone())
+					writeFuture.cancel();
+				writeFuture = null;
+			}
 			closeInternal();
 		}
 
