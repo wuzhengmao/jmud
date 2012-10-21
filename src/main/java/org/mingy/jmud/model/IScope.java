@@ -247,6 +247,15 @@ public interface IScope {
 	Alias removeAlias(String name);
 
 	/**
+	 * 展开一个别名对应的脚本。
+	 * 
+	 * @param name
+	 *            别名
+	 * @return 别名的脚本，未定义或非脚本类型时返回null
+	 */
+	String expandAlias(String name);
+
+	/**
 	 * 取得一组触发器。
 	 * 
 	 * @param group

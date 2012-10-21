@@ -258,6 +258,11 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
+	public String expandAlias(String name) {
+		return getAliases().getScript(name);
+	}
+
+	@Override
 	public Collection<Trigger> getTriggers(String group) {
 		return getTriggers().get(group);
 	}

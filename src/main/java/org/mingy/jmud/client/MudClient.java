@@ -16,6 +16,8 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -230,6 +232,17 @@ public class MudClient implements TelnetClientListener, IMudClient {
 					doCommand();
 					event.doit = false;
 					break;
+				case SWT.TAB:
+					String command = commandInput.getText();
+					if (command != null && command.length() > 0) {
+						String script = context.expandAlias(command);
+						if (script != null) {
+							commandInput.setText(script);
+							commandInput.setSelection(script.length());
+						}
+					}
+					event.doit = false;
+					break;
 				case SWT.ARROW_UP:
 					if (cmdptr > 0) {
 						cmdptr--;
@@ -253,6 +266,14 @@ public class MudClient implements TelnetClientListener, IMudClient {
 					event.doit = false;
 					break;
 				}
+			}
+		});
+		commandInput.addTraverseListener(new TraverseListener() {
+			@Override
+			public void keyTraversed(TraverseEvent event) {
+				if (event.detail == SWT.TRAVERSE_TAB_NEXT
+						|| event.detail == SWT.TRAVERSE_TAB_PREVIOUS)
+					event.doit = false;
 			}
 		});
 		commands = new LinkedList<String>();

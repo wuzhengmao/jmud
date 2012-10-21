@@ -95,6 +95,23 @@ public class Aliases {
 	}
 
 	/**
+	 * 取得别名的脚本。
+	 * 
+	 * @param name
+	 *            别名
+	 * @return 脚本，如果别名未定义或者不是脚本类型则返回null
+	 */
+	public String getScript(String name) {
+		Alias alias = get(name);
+		if (alias != null) {
+			IExecution execution = alias.getExecution();
+			if (execution instanceof Script)
+				return ((Script) execution).getContent();
+		}
+		return null;
+	}
+
+	/**
 	 * 移除一个别名。
 	 * 
 	 * @param name

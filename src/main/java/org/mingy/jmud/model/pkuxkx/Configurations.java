@@ -18,6 +18,7 @@ public class Configurations extends Context {
 		super.init(client);
 		setShortKey(SWT.KEYPAD_0, "hp");
 		setVariable("i", "hello");
+		setAlias("lc", "l corpse");
 		addTrigger(null, "^您的英文名字（要注册新人物请输入new）：", "kscs");
 		addTrigger(null, "此ID档案已存在，请输入密码：", "zxc123");
 		setTimer("ok", "hi @i;#wa 1500;l @i");
