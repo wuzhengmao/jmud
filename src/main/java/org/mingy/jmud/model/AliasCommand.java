@@ -2,6 +2,9 @@ package org.mingy.jmud.model;
 
 /**
  * 对别名进行增、删、改的指令。
+ * <p>
+ * Usage: #alias [module]name [script]
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0

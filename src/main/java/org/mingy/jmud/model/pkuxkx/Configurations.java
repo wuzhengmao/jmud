@@ -26,7 +26,7 @@ public class Configurations extends Context {
 		module.addTrigger(
 				null,
 				"^【 精神 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(\\d+)%\\]\\s*【 精力 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\(\\+\\s*(\\d+)\\)$",
-				"#set i {i + ' ' + %1};#alias test {ok %%*; hi %%*};test @i");
+				"#set i {i + ' ' + %1};#if {i.length > 15} {#return;};#alias test {ok %%*; hi %%*};test @i");
 
 	}
 }

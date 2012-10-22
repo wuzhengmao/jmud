@@ -41,6 +41,7 @@ public abstract class Commands {
 		TYPES.put("#wa", WaitCommand.class);
 		TYPES.put("#wait", WaitCommand.class);
 		TYPES.put("#return", ReturnCommand.class);
+		TYPES.put("#if", IfCommand.class);
 	}
 
 	/**

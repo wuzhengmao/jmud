@@ -4,6 +4,9 @@ import org.mingy.jmud.util.Variables;
 
 /**
  * 等待指令。
+ * <p>
+ * Usage: #wait milliseconds
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0

@@ -2,6 +2,9 @@ package org.mingy.jmud.model;
 
 /**
  * 模块控制指令。
+ * <p>
+ * Usage: #m(+|-) module
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0

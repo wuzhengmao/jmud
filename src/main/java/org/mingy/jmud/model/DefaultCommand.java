@@ -22,8 +22,7 @@ public class DefaultCommand extends Command {
 				execution.execute(scope, items);
 			return true;
 		}
-		if (args != null && args.length > 0)
-			header = Commands.replaceArgs(header, args);
+		header = Commands.replaceArgs(header, args);
 		scope.sendCommand(Commands.replaceCommand(scope, header));
 		return true;
 	}

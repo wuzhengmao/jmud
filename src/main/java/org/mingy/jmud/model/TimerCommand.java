@@ -7,6 +7,10 @@ import org.mingy.jmud.util.Variables;
 
 /**
  * 定时器控制指令。
+ * <p>
+ * Usage: #timer [module]name [script]<br>
+ * Usage: #tset [module]name [tick]
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0

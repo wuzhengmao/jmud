@@ -410,8 +410,8 @@ public class MudClient implements TelnetClientListener, IMudClient {
 			if (e > p) {
 				String s = new String(bytes, p, e - p + 1);
 				if (bytes[p + 1] == '[' && bytes[e] == 'm') {
-					if (logger.isDebugEnabled()) {
-						logger.debug("SGR: <ESC>" + s.substring(1));
+					if (logger.isTraceEnabled()) {
+						logger.trace("SGR: <ESC>" + s.substring(1));
 					}
 					currentSGR = new SGR(s, currentSGR);
 				} else {

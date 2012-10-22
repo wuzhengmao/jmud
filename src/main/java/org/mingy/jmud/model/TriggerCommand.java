@@ -2,6 +2,9 @@ package org.mingy.jmud.model;
 
 /**
  * 触发器控制指令。
+ * <p>
+ * Usage: #t(+|-) [module]group<br>
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0

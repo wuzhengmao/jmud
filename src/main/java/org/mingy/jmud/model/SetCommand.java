@@ -4,6 +4,9 @@ import java.util.regex.Pattern;
 
 /**
  * 赋值的指令。
+ * <p>
+ * Usage: #set var [expression]
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0
