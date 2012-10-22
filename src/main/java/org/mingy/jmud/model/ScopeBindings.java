@@ -39,4 +39,14 @@ public class ScopeBindings extends SimpleBindings {
 			value = parent.get(key);
 		return value;
 	}
+
+	@Override
+	public Object put(String name, Object value) {
+		if (value instanceof Double) {
+			Double val = (Double) value;
+			if (val.doubleValue() == val.longValue())
+				value = val.longValue();
+		}
+		return super.put(name, value);
+	}
 }

@@ -48,6 +48,10 @@ public class Script implements IExecution {
 			} catch (Exception e) {
 				if (e instanceof InterruptExecutionException)
 					throw (InterruptExecutionException) e;
+				if (e instanceof SkipOnceException)
+					throw (SkipOnceException) e;
+				if (e instanceof BreakLoopException)
+					throw (BreakLoopException) e;
 				if (logger.isErrorEnabled()) {
 					logger.error("error on execute: " + cmd.origin, e);
 				}

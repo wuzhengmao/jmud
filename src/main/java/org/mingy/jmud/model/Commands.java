@@ -42,6 +42,10 @@ public abstract class Commands {
 		TYPES.put("#wait", WaitCommand.class);
 		TYPES.put("#return", ReturnCommand.class);
 		TYPES.put("#if", IfCommand.class);
+		TYPES.put("#while", WhileCommand.class);
+		TYPES.put("#until", UntilCommand.class);
+		TYPES.put("#break", BreakCommand.class);
+		TYPES.put("#skip", SkipCommand.class);
 	}
 
 	/**

@@ -19,6 +19,9 @@ public class Configurations extends Context {
 		setShortKey(SWT.KEYPAD_0, "hp");
 		setVariable("i", "hello");
 		setAlias("lc", "l corpse");
+		setAlias(
+				"while",
+				"#set x 1;#while true {hi @x;#set x {x+1};#if {x > 10} {#break;};#wa 1000;};over;");
 		addTrigger(null, "^您的英文名字（要注册新人物请输入new）：", "kscs");
 		addTrigger(null, "此ID档案已存在，请输入密码：", "zxc123");
 		setTimer("ok", "hi @i;#wa 1500;l @i");
