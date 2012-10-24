@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         id="application"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="org.mingy.jmud.ui.Application">
+         </run>
+      </application>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            name="MUD Perspective"
+            class="org.mingy.jmud.ui.Perspective"
+            id="org.mingy.jmud.ui.perspective">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="org.mingy.jmud.ui.SessionEditor"
+            id="org.mingy.jmud.ui.SessionEditor"
+            name="New Session">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            class="org.mingy.jmud.ui.CharacterView"
+            id="org.mingy.jmud.ui.CharacterView"
+            name="New Character">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Category"
+            id="org.mingy.jmud.ui.category">
+      </category>
+      <command
+            name="New Session"
+            description="Creates a new connection"
+            categoryId="org.mingy.jmud.ui.category"
+            id="org.mingy.jmud.ui.newSession">
+      </command>
+      <command
+            name="Open Console"
+            description="Opens a console for log output"
+            categoryId="org.mingy.jmud.ui.category"
+            id="org.mingy.jmud.ui.openConsole">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.mingy.jmud.ui.openConsole"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+L">
+      </key>
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="org.mingy.jmud.application"
+            name="Java Mud Client">
+         <property
+               name="appName"
+               value="Java Mud Client">
+         </property>
+         <property
+               name="aboutText"
+               value="RCP mud client created by PDE">
+         </property>
+      </product>
+   </extension>
+
+</plugin>

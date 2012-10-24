@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Java Mud Client
+Bundle-SymbolicName: org.mingy.jmud; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-Activator: org.mingy.jmud.Activator
+Bundle-Vendor: Mingy
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.console
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .,
+ lib/commons-logging-1.1.1.jar,
+ lib/log4j-1.2.16.jar,
+ lib/netty-3.5.8.Final.jar
