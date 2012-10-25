@@ -2,7 +2,9 @@ package org.mingy.jmud.client;
 
 import java.awt.Toolkit;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,6 +21,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Rectangle;
@@ -59,6 +62,8 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	private static final int COMMAND_HISTORY_SIZE = 20;
 	/** TAB的长度 */
 	private static final int TABS = 8;
+	/** 颜色的高速缓存 */
+	private static final Map<Integer, Color> COLORS;
 
 	/** 主机名 */
 	private String hostname;
@@ -100,6 +105,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	static {
 		String platform = SWT.getPlatform();
 		IS_MAC = "carbon".equals(platform) || "cocoa".equals(platform);
+		COLORS = new HashMap<Integer, Color>();
 	}
 
 	/**
@@ -393,8 +399,8 @@ public class MudClient implements TelnetClientListener, IMudClient {
 
 	private void initSGR() {
 		currentSGR = defaultSGR = new SGR(SGR.DEFAULT);
-		int[] rgb = defaultSGR.getBackgroundColor();
-		styledText.setBackground(new Color(display, rgb[0], rgb[1], rgb[2]));
+		styledText.setBackground(getColor(display,
+				defaultSGR.getBackgroundColor()));
 	}
 
 	private void processLine(byte[] bytes) throws Exception {
@@ -461,12 +467,9 @@ public class MudClient implements TelnetClientListener, IMudClient {
 
 	private void doEcho(String text, String style) {
 		SGR sgr = style != null ? new SGR(style, defaultSGR) : currentSGR;
-		int[] textColor = sgr.getTextColor();
-		int[] bgColor = sgr.getBackgroundColor();
 		final StyleRange sr = new StyleRange(styledText.getCharCount(),
-				text.length(), new Color(display, textColor[0], textColor[1],
-						textColor[2]), new Color(display, bgColor[0],
-						bgColor[1], bgColor[2]));
+				text.length(), getColor(display, sgr.getTextColor()), getColor(
+						display, sgr.getBackgroundColor()));
 		if (sgr.isBlink())
 			sr.fontStyle |= SWT.BOLD;
 		if (sgr.isItalic())
@@ -514,6 +517,16 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		} else {
 			return start + 1;
 		}
+	}
+
+	private static Color getColor(Device device, int[] rgb) {
+		int key = (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
+		Color color = COLORS.get(key);
+		if (color == null) {
+			color = new Color(device, rgb[0], rgb[1], rgb[2]);
+			COLORS.put(key, color);
+		}
+		return color;
 	}
 
 	/**
