@@ -14,9 +14,21 @@ public interface IMudClient {
 	void connect();
 
 	/**
+	 * 断开连接。
+	 */
+	void disconnect();
+
+	/**
 	 * 断开连接并关闭客户端。
 	 */
 	void close();
+
+	/**
+	 * 返回客户端是否已连接。
+	 * 
+	 * @return true为已连接
+	 */
+	boolean isConnected();
 
 	/**
 	 * 以指定样式显示一段文本。

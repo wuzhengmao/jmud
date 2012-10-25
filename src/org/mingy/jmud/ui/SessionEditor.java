@@ -16,7 +16,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 import org.mingy.jmud.client.IMudClient;
 import org.mingy.jmud.client.MudClient;
-import org.mingy.jmud.client.Session;
+import org.mingy.jmud.model.Session;
 
 public class SessionEditor extends EditorPart {
 
@@ -24,7 +24,7 @@ public class SessionEditor extends EditorPart {
 
 	private StyledText styledText;
 	private Text text;
-	private Session session;
+	private SessionEditorInput input;
 
 	public SessionEditor() {
 	}
@@ -54,10 +54,12 @@ public class SessionEditor extends EditorPart {
 		fd_styledText.bottom = new FormAttachment(text, 0);
 		styledText.setLayoutData(fd_styledText);
 
+		Session session = input.getSession();
 		if (session.getFont() != null)
 			styledText.setFont(session.getFont());
 
 		final IMudClient mc = new MudClient(session, styledText, text);
+		input.setClient(mc);
 		mc.connect();
 
 		IPartService service = (IPartService) getSite().getService(
@@ -90,8 +92,11 @@ public class SessionEditor extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input)
 			throws PartInitException {
 		setSite(site);
+		if (!(input instanceof SessionEditorInput))
+			throw new PartInitException("unsupported type: " + input.getClass());
+		this.input = (SessionEditorInput) input;
 		setInput(input);
-		session = (Session) input.getAdapter(Session.class);
+		setPartName(input.getName());
 	}
 
 	@Override

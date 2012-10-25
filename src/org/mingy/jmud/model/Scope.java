@@ -66,13 +66,14 @@ public abstract class Scope implements IScope {
 	public Scope addChild(String name) {
 		if (name == null)
 			throw new NullPointerException("name is null");
-		if (getScope(name) != null)
-			throw new IllegalArgumentException("duplicate module name: " + name);
-		if (logger.isInfoEnabled()) {
-			logger.info("[" + getName() + "] create module: " + name);
+		Scope module = getScope(name);
+		if (module == null) {
+			if (logger.isInfoEnabled()) {
+				logger.info("[" + getName() + "] create module: " + name);
+			}
+			module = new Module(name, this);
+			children.put(name, module);
 		}
-		Scope module = new Module(name, this);
-		children.put(name, module);
 		return module;
 	}
 
@@ -89,6 +90,9 @@ public abstract class Scope implements IScope {
 
 	@Override
 	public abstract Scope getContext();
+
+	@Override
+	public abstract Scope getScope(String name);
 
 	protected Scope getSubScope(String name) {
 		Scope scope = getChild(name);

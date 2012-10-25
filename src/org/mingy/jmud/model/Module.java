@@ -21,7 +21,7 @@ public class Module extends Scope {
 	}
 
 	@Override
-	public IScope getScope(String name) {
+	public Scope getScope(String name) {
 		return getContext().getScope(name);
 	}
 }

@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Text;
 import org.mingy.jmud.model.Context;
+import org.mingy.jmud.model.Session;
 import org.mingy.jmud.model.ShortKey;
 
 /**
@@ -112,10 +113,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		this.styledText = styledText;
 		this.commandInput = commandInput;
 		this.context = new Context(this);
-		if (session.getConfiguration() != null)
-			session.getConfiguration().inject(context);
-		context.setVariable("character", session.getCharacter());
-		context.setVariable("password", session.getPassword());
+		context.init(session);
 		init();
 		initSGR();
 	}
@@ -128,12 +126,22 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	}
 
 	@Override
+	public void disconnect() {
+		if (client != null) {
+			client.close();
+			client = null;
+		}
+	}
+
+	@Override
 	public void close() {
-		if (client == null)
-			throw new IllegalStateException("no telnet client instance");
+		disconnect();
 		context.destroy();
-		client.close();
-		client = null;
+	}
+
+	@Override
+	public boolean isConnected() {
+		return client != null && client.isAvailable();
 	}
 
 	@Override
@@ -558,7 +566,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	public void send(String command) {
 		command += "\n";
 		echo(command, SGR.ECHO);
-		if (client != null && client.isAvailable()) {
+		if (isConnected()) {
 			client.write(command.getBytes(charset));
 		}
 	}

@@ -1,9 +1,8 @@
-package org.mingy.jmud.client;
+package org.mingy.jmud.model;
 
 import java.nio.charset.Charset;
 
 import org.eclipse.swt.graphics.Font;
-import org.mingy.jmud.model.Configuration;
 
 /**
  * 会话连接信息。

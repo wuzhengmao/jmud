@@ -23,6 +23,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	private Action openConsoleAction;
 	private IAction closeAction;
 	private NewSessionAction newSessionAction;
+	private ReconnectAction reconnectAction;
+	private DisconnectAction disconnectAction;
 
 	public ApplicationActionBarAdvisor(IActionBarConfigurer configurer) {
 		super(configurer);
@@ -48,7 +50,16 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		}
 		{
 			newSessionAction = new NewSessionAction(window, "&New Session");
+			newSessionAction.setText("&New Session...");
 			register(newSessionAction);
+		}
+		{
+			reconnectAction = new ReconnectAction(window, "&Reconnect");
+			register(reconnectAction);
+		}
+		{
+			disconnectAction = new DisconnectAction(window, "&Disconnect");
+			register(disconnectAction);
 		}
 	}
 
@@ -63,6 +74,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 
 		menuBar.add(fileMenu);
 		fileMenu.add(newSessionAction);
+		fileMenu.add(new Separator());
+		fileMenu.add(reconnectAction);
+		fileMenu.add(disconnectAction);
 		fileMenu.add(closeAction);
 		fileMenu.add(new Separator());
 		fileMenu.add(quitAction);
@@ -77,6 +91,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
 		coolBar.add(new ToolBarContributionItem(toolbar, "main"));
 		toolbar.add(newSessionAction);
+		toolbar.add(new Separator());
+		toolbar.add(reconnectAction);
+		toolbar.add(disconnectAction);
 		toolbar.add(new Separator());
 		toolbar.add(openConsoleAction);
 	}

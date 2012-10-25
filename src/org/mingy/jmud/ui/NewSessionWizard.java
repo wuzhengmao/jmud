@@ -11,8 +11,8 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.mingy.jmud.client.Session;
 import org.mingy.jmud.model.Configurations;
+import org.mingy.jmud.model.Session;
 
 public class NewSessionWizard extends Wizard {
 

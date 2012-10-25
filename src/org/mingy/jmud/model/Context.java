@@ -51,7 +51,6 @@ public class Context extends Scope {
 		shortKeys = new ShortKeys();
 		workThreadPool = Executors.newFixedThreadPool(MAX_WORK_THREADS);
 		inputThreadPool = Executors.newFixedThreadPool(MAX_INPUT_THREADS);
-		init();
 	}
 
 	@Override
@@ -60,7 +59,7 @@ public class Context extends Scope {
 	}
 
 	@Override
-	public IScope getScope(String name) {
+	public Scope getScope(String name) {
 		return getSubScope(name);
 	}
 
@@ -87,8 +86,11 @@ public class Context extends Scope {
 
 	/**
 	 * 初始化。
+	 * 
+	 * @param session
+	 *            会话连接信息
 	 */
-	private void init() {
+	public void init(Session session) {
 		getVariables().put("context", this);
 		getVariables().put("client", client);
 		try {
@@ -99,6 +101,11 @@ public class Context extends Scope {
 		} catch (ScriptException e) {
 			throw new RuntimeException(e);
 		}
+		Scope module = addChild(Modules.LOGIN_MODULE);
+		module.setVariable("character", session.getCharacter());
+		module.setVariable("password", session.getPassword());
+		if (session.getConfiguration() != null)
+			session.getConfiguration().inject(this);
 	}
 
 	/**

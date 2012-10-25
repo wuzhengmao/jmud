@@ -3,11 +3,13 @@ package org.mingy.jmud.ui;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
-import org.mingy.jmud.client.Session;
+import org.mingy.jmud.client.IMudClient;
+import org.mingy.jmud.model.Session;
 
 public class SessionEditorInput implements IEditorInput {
 
 	private Session session;
+	private IMudClient client;
 
 	public SessionEditorInput(Session session) {
 		this.session = session;
@@ -16,8 +18,6 @@ public class SessionEditorInput implements IEditorInput {
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object getAdapter(Class adapter) {
-		if (adapter.isAssignableFrom(Session.class))
-			return session;
 		return null;
 	}
 
@@ -44,5 +44,17 @@ public class SessionEditorInput implements IEditorInput {
 	@Override
 	public String getToolTipText() {
 		return "";
+	}
+
+	public Session getSession() {
+		return session;
+	}
+
+	public IMudClient getClient() {
+		return client;
+	}
+
+	void setClient(IMudClient client) {
+		this.client = client;
 	}
 }

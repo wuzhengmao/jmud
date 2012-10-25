@@ -19,8 +19,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.mingy.jmud.client.Session;
 import org.mingy.jmud.model.Configurations;
+import org.mingy.jmud.model.Session;
 import org.mingy.jmud.util.Strings;
 
 public class NewSessionWizardPage extends WizardPage implements ModifyListener {
