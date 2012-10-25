@@ -12,6 +12,7 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.mingy.jmud.client.Session;
+import org.mingy.jmud.model.Configurations;
 
 public class NewSessionWizard extends Wizard {
 
@@ -39,6 +40,7 @@ public class NewSessionWizard extends Wizard {
 		session.setFont(new Font(getShell().getDisplay(), fontData));
 		session.setCharacter("kscs");
 		session.setPassword("zxc123");
+		session.setConfiguration(Configurations.get("test@pkuxkx.net"));
 		NewSessionWizardPage page = new NewSessionWizardPage(session);
 		addPage(page);
 	}

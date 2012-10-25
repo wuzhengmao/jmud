@@ -14,22 +14,25 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.mingy.jmud.client.Session;
+import org.mingy.jmud.model.Configurations;
 import org.mingy.jmud.util.Strings;
 
 public class NewSessionWizardPage extends WizardPage implements ModifyListener {
 
 	private Text txtHost;
 	private Text txtPort;
+	private Text txtTimeout;
+	private Combo cmbCharset;
+	private Text txtFont;
 	private Text txtCharacter;
 	private Text txtPassword;
-	private Text txtCharset;
-	private Text txtFont;
-	private Text txtTimeout;
+	private Combo cmbConfiguration;
 	private Session session;
 
 	/**
@@ -87,10 +90,13 @@ public class NewSessionWizardPage extends WizardPage implements ModifyListener {
 				false, 1, 1));
 		lblCharset.setText("Charset:");
 
-		txtCharset = new Text(container, SWT.BORDER);
-		txtCharset.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
+		cmbCharset = new Combo(container, SWT.READ_ONLY);
+		cmbCharset.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
 				false, 1, 1));
 		new Label(container, SWT.NONE);
+		for (Charset charset : Charset.availableCharsets().values()) {
+			cmbCharset.add(charset.toString());
+		}
 
 		Label lblFont = new Label(container, SWT.NONE);
 		lblFont.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false,
@@ -139,13 +145,49 @@ public class NewSessionWizardPage extends WizardPage implements ModifyListener {
 				false, 1, 1));
 		new Label(container, SWT.NONE);
 
+		Label lblConfiguration = new Label(container, SWT.NONE);
+		lblConfiguration.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER,
+				false, false, 1, 1));
+		lblConfiguration.setText("Configuration:");
+
+		cmbConfiguration = new Combo(container, SWT.READ_ONLY);
+		cmbConfiguration.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
+				false, 1, 1));
+		new Label(container, SWT.NONE);
+		cmbConfiguration.add("<None>");
+		for (String name : Configurations.names()) {
+			cmbConfiguration.add(name);
+		}
+
 		setSession();
 		txtHost.addModifyListener(this);
 		txtPort.addModifyListener(this);
 		txtTimeout.addModifyListener(this);
-		txtCharset.addModifyListener(this);
+		cmbCharset.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				int i = cmbCharset.getSelectionIndex();
+				if (i < 0) {
+					session.setCharset(null);
+				} else {
+					session.setCharset(Strings.toCharset(cmbCharset.getItem(i)));
+				}
+			}
+		});
 		txtCharacter.addModifyListener(this);
 		txtPassword.addModifyListener(this);
+		cmbConfiguration.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				int i = cmbConfiguration.getSelectionIndex();
+				if (i > 0) {
+					session.setConfiguration(Configurations
+							.get(cmbConfiguration.getItem(i)));
+				} else {
+					session.setConfiguration(null);
+				}
+			}
+		});
 		getSession();
 	}
 
@@ -192,17 +234,6 @@ public class NewSessionWizardPage extends WizardPage implements ModifyListener {
 			}
 			session.setTimeout(timeout);
 		}
-		if (Strings.isBlank(txtCharset.getText())) {
-			session.setCharset(null);
-		} else {
-			Charset charset = Strings.toCharset(txtCharset.getText().trim());
-			if (charset == null) {
-				setErrorMessage("Charset is not supported.");
-				return false;
-			} else {
-				session.setCharset(charset);
-			}
-		}
 		session.setCharacter(!Strings.isBlank(txtCharacter.getText()) ? txtCharacter
 				.getText().trim() : null);
 		session.setPassword(!Strings.isBlank(txtPassword.getText()) ? txtPassword
@@ -218,13 +249,19 @@ public class NewSessionWizardPage extends WizardPage implements ModifyListener {
 		txtHost.setText(session.getHost() != null ? session.getHost() : "");
 		txtPort.setText(String.valueOf(session.getPort()));
 		txtTimeout.setText(String.valueOf(session.getTimeout()));
-		txtCharset.setText(session.getCharset() != null ? session.getCharset()
-				.toString() : "");
+		if (session.getCharset() != null)
+			cmbCharset.setText(session.getCharset().toString());
+		else
+			cmbCharset.select(-1);
 		txtFont.setText(session.getFont() != null ? Arrays.toString(session
 				.getFont().getFontData()) : "");
 		txtCharacter.setText(session.getCharacter() != null ? session
 				.getCharacter() : "");
 		txtPassword.setText(session.getPassword() != null ? session
 				.getPassword() : "");
+		if (session.getConfiguration() != null)
+			cmbConfiguration.setText(session.getConfiguration().getName());
+		else
+			cmbConfiguration.select(0);
 	}
 }

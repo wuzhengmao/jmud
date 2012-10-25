@@ -57,10 +57,7 @@ public class SessionEditor extends EditorPart {
 		if (session.getFont() != null)
 			styledText.setFont(session.getFont());
 
-		final IMudClient mc = new MudClient(session.getHost(),
-				session.getPort(), session.getTimeout(), session.getCharset(),
-				styledText, text,
-				new org.mingy.jmud.model.pkuxkx.Configurations());
+		final IMudClient mc = new MudClient(session, styledText, text);
 		mc.connect();
 
 		IPartService service = (IPartService) getSite().getService(

@@ -4,6 +4,7 @@
 <product name="Java Mud Client" uid="org.mingy.jmud" id="org.mingy.jmud.product" application="org.mingy.jmud.application" version="1.0.0" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
+      <image path="/jmud/icons/alt_about.gif"/>
       <text>
          RCP mud client created by PDE
       </text>
@@ -16,7 +17,7 @@
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages/>
+   <windowImages i16="/jmud/icons/alt_window_16.gif" i32="/jmud/icons/alt_window_32.gif"/>
 
    <launcher name="jmud">
       <solaris/>
@@ -24,6 +25,7 @@
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
       <windows include="false">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7</windows>

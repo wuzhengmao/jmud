@@ -22,17 +22,11 @@ import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ScrollBar;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.mingy.jmud.model.Context;
 import org.mingy.jmud.model.ShortKey;
@@ -48,14 +42,6 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	/** 日志 */
 	private static final Log logger = LogFactory.getLog(MudClient.class);
 
-	/** 默认字体 */
-	private static final String DEFAULT_FONT_FAMILY = "YaHei Consolas Hybrid";
-	/** 默认的字体大小 */
-	private static final int DEFAULT_FONT_SIZE = 10;
-	/** 默认的语种 */
-	private static final String DEFAULT_LOCALE = "zh_CN";
-	/** 默认的字符集 */
-	private static final Charset DEFAULT_CHARSET = Charset.forName("GBK");
 	/** 富文本内容的最大行数 */
 	private static final int CONTENT_MAX_LINES = 1000;
 	/** 指令历史记录数 */
@@ -111,31 +97,25 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	/**
 	 * 构造器。
 	 * 
-	 * @param hostname
-	 *            主机名或IP
-	 * @param port
-	 *            端口
-	 * @param connectTimeout
-	 *            连接超时（毫秒）
-	 * @param charset
-	 *            字符集
+	 * @param session
+	 *            会话连接信息
 	 * @param mainStyledText
 	 *            富文本显示区
 	 * @param commandInput
 	 *            指令输入框
-	 * @param context
-	 *            上下文
 	 */
-	public MudClient(String hostname, int port, int connectTimeout,
-			Charset charset, StyledText styledText, Text commandInput,
-			Context context) {
-		this.hostname = hostname;
-		this.port = port;
-		this.connectTimeout = connectTimeout;
-		this.charset = charset;
+	public MudClient(Session session, StyledText styledText, Text commandInput) {
+		this.hostname = session.getHost();
+		this.port = session.getPort();
+		this.connectTimeout = session.getTimeout() * 1000;
+		this.charset = session.getCharset();
 		this.styledText = styledText;
 		this.commandInput = commandInput;
-		this.context = context;
+		this.context = new Context(this);
+		if (session.getConfiguration() != null)
+			session.getConfiguration().inject(context);
+		context.setVariable("character", session.getCharacter());
+		context.setVariable("password", session.getPassword());
 		init();
 		initSGR();
 	}
@@ -164,7 +144,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 
 	@Override
 	public void onDisconnected() {
-		// TODO: 重连？
+		// TODO: 重连
 	}
 
 	@Override
@@ -194,7 +174,6 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	}
 
 	private void init() {
-		context.init(this);
 		display = styledText.getDisplay();
 		content = styledText.getContent();
 		styledText.setEditable(false);
@@ -230,50 +209,7 @@ public class MudClient implements TelnetClientListener, IMudClient {
 		commandInput.addListener(SWT.KeyDown, scrollListener);
 		commandInput.addListener(SWT.MouseWheel, scrollListener);
 		commandInput.addListener(SWT.KeyDown, new ShortKeyListener());
-		commandInput.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent event) {
-				switch (event.keyCode) {
-				case SWT.CR:
-					doCommand();
-					event.doit = false;
-					break;
-				case SWT.TAB:
-					String command = commandInput.getText();
-					if (command != null && command.length() > 0) {
-						String script = context.expandAlias(command);
-						if (script != null) {
-							commandInput.setText(script);
-							commandInput.setSelection(script.length());
-						}
-					}
-					event.doit = false;
-					break;
-				case SWT.ARROW_UP:
-					if (cmdptr > 0) {
-						cmdptr--;
-						commandInput.setText(commands.get(cmdptr));
-					} else {
-						cmdptr = -1;
-						commandInput.setText("");
-					}
-					commandInput.setSelection(commandInput.getText().length());
-					event.doit = false;
-					break;
-				case SWT.ARROW_DOWN:
-					if (cmdptr < commands.size() - 1) {
-						cmdptr++;
-						commandInput.setText(commands.get(cmdptr));
-					} else {
-						cmdptr = commands.size();
-						commandInput.setText("");
-					}
-					commandInput.setSelection(commandInput.getText().length());
-					event.doit = false;
-					break;
-				}
-			}
-		});
+		commandInput.addKeyListener(new CommandInputListener());
 		commandInput.addTraverseListener(new TraverseListener() {
 			@Override
 			public void keyTraversed(TraverseEvent event) {
@@ -283,6 +219,54 @@ public class MudClient implements TelnetClientListener, IMudClient {
 			}
 		});
 		commands = new LinkedList<String>();
+	}
+
+	/**
+	 * 命令行输入键的监听。
+	 */
+	class CommandInputListener extends KeyAdapter {
+		@Override
+		public void keyPressed(KeyEvent event) {
+			switch (event.keyCode) {
+			case SWT.CR:
+				doCommand();
+				event.doit = false;
+				break;
+			case SWT.TAB:
+				String command = commandInput.getText();
+				if (command != null && command.length() > 0) {
+					String script = context.expandAlias(command);
+					if (script != null) {
+						commandInput.setText(script);
+						commandInput.setSelection(script.length());
+					}
+				}
+				event.doit = false;
+				break;
+			case SWT.ARROW_UP:
+				if (cmdptr > 0) {
+					cmdptr--;
+					commandInput.setText(commands.get(cmdptr));
+				} else {
+					cmdptr = -1;
+					commandInput.setText("");
+				}
+				commandInput.setSelection(commandInput.getText().length());
+				event.doit = false;
+				break;
+			case SWT.ARROW_DOWN:
+				if (cmdptr < commands.size() - 1) {
+					cmdptr++;
+					commandInput.setText(commands.get(cmdptr));
+				} else {
+					cmdptr = commands.size();
+					commandInput.setText("");
+				}
+				commandInput.setSelection(commandInput.getText().length());
+				event.doit = false;
+				break;
+			}
+		}
 	}
 
 	/**
@@ -590,49 +574,5 @@ public class MudClient implements TelnetClientListener, IMudClient {
 				}
 			});
 		}
-	}
-
-	/**
-	 * TODO: 调试入口，创建UI布局。
-	 * 
-	 * @param args
-	 *            未使用
-	 * @throws Exception
-	 */
-	public static void main(String[] args) throws Exception {
-		Display display = new Display();
-		Shell shell = new Shell(display);
-		shell.setLayout(new FormLayout());
-		StyledText styledText = new StyledText(shell, SWT.BORDER | SWT.V_SCROLL);
-		FontData fontData = new FontData(DEFAULT_FONT_FAMILY,
-				DEFAULT_FONT_SIZE, SWT.NORMAL);
-		fontData.setLocale(DEFAULT_LOCALE);
-		Font font = new Font(display, fontData);
-		styledText.setFont(font);
-		Text commandInput = new Text(shell, SWT.BORDER | SWT.SINGLE);
-		commandInput.forceFocus();
-		FormData textData = new FormData();
-		textData.top = new FormAttachment(0, 0);
-		textData.bottom = new FormAttachment(commandInput, 0);
-		textData.left = new FormAttachment(0, 0);
-		textData.right = new FormAttachment(100, 0);
-		styledText.setLayoutData(textData);
-		FormData inputData = new FormData();
-		inputData.bottom = new FormAttachment(100, 0);
-		inputData.left = new FormAttachment(0, 0);
-		inputData.right = new FormAttachment(100, 0);
-		commandInput.setLayoutData(inputData);
-		shell.setSize(800, 600);
-		shell.open();
-		IMudClient mc = new MudClient("pkuxkx.net", 5555, 10000,
-				DEFAULT_CHARSET, styledText, commandInput,
-				new org.mingy.jmud.model.pkuxkx.Configurations());
-		mc.connect();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
-		}
-		mc.close();
-		display.dispose();
 	}
 }

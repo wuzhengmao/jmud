@@ -3,6 +3,7 @@ package org.mingy.jmud.client;
 import java.nio.charset.Charset;
 
 import org.eclipse.swt.graphics.Font;
+import org.mingy.jmud.model.Configuration;
 
 /**
  * 会话连接信息。
@@ -19,6 +20,7 @@ public class Session {
 	private Font font;
 	private String character;
 	private String password;
+	private Configuration configuration;
 
 	/**
 	 * 返回主机名或IP。
@@ -151,5 +153,24 @@ public class Session {
 	 */
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	/**
+	 * 返回配置。
+	 * 
+	 * @return 配置
+	 */
+	public Configuration getConfiguration() {
+		return configuration;
+	}
+
+	/**
+	 * 设置配置。
+	 * 
+	 * @param configuration
+	 *            配置
+	 */
+	public void setConfiguration(Configuration configuration) {
+		this.configuration = configuration;
 	}
 }

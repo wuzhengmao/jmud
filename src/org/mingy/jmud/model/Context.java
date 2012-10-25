@@ -38,8 +38,20 @@ public class Context extends Scope {
 	/** 输入线程池 */
 	private ExecutorService inputThreadPool;
 
-	public Context() {
+	/**
+	 * 构造器。
+	 * 
+	 * @param client
+	 *            MUD客户端
+	 */
+	public Context(IMudClient client) {
 		super("root", null);
+		this.client = client;
+		JSEngine = new ScriptEngineManager().getEngineByName("JavaScript");
+		shortKeys = new ShortKeys();
+		workThreadPool = Executors.newFixedThreadPool(MAX_WORK_THREADS);
+		inputThreadPool = Executors.newFixedThreadPool(MAX_INPUT_THREADS);
+		init();
 	}
 
 	@Override
@@ -75,14 +87,8 @@ public class Context extends Scope {
 
 	/**
 	 * 初始化。
-	 * 
-	 * @param client
-	 *            MUD客户端
 	 */
-	public void init(IMudClient client) {
-		this.client = client;
-		JSEngine = new ScriptEngineManager().getEngineByName("JavaScript");
-		shortKeys = new ShortKeys();
+	private void init() {
 		getVariables().put("context", this);
 		getVariables().put("client", client);
 		try {
@@ -93,8 +99,6 @@ public class Context extends Scope {
 		} catch (ScriptException e) {
 			throw new RuntimeException(e);
 		}
-		workThreadPool = Executors.newFixedThreadPool(MAX_WORK_THREADS);
-		inputThreadPool = Executors.newFixedThreadPool(MAX_INPUT_THREADS);
 	}
 
 	/**

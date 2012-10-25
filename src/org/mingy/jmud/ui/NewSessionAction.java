@@ -24,7 +24,7 @@ public class NewSessionAction extends Action {
 	public void run() {
 		NewSessionWizard wizard = new NewSessionWizard(window);
 		WizardDialog dialog = new WizardDialog(window.getShell(), wizard);
-		dialog.setPageSize(400, 210);
+		dialog.setPageSize(400, 250);
 		dialog.open();
 	}
 }
