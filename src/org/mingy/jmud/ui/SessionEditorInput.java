@@ -1,5 +1,6 @@
 package org.mingy.jmud.ui;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
@@ -10,6 +11,8 @@ public class SessionEditorInput implements IEditorInput {
 
 	private Session session;
 	private IMudClient client;
+	private Action reconnectAction;
+	private Action disconnectAction;
 
 	public SessionEditorInput(Session session) {
 		this.session = session;
@@ -56,5 +59,21 @@ public class SessionEditorInput implements IEditorInput {
 
 	void setClient(IMudClient client) {
 		this.client = client;
+	}
+
+	public Action getReconnectAction() {
+		return reconnectAction;
+	}
+
+	void setReconnectAction(Action reconnectAction) {
+		this.reconnectAction = reconnectAction;
+	}
+
+	public Action getDisconnectAction() {
+		return disconnectAction;
+	}
+
+	void setDisconnectAction(Action disconnectAction) {
+		this.disconnectAction = disconnectAction;
 	}
 }

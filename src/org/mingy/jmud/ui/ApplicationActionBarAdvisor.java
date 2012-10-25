@@ -11,6 +11,7 @@ import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
@@ -61,6 +62,17 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 			disconnectAction = new DisconnectAction(window, "&Disconnect");
 			register(disconnectAction);
 		}
+		window.getPartService().addPartListener(new PartAdapter() {
+			@Override
+			public void partOpened(IWorkbenchPart part) {
+				if (part instanceof SessionEditor) {
+					SessionEditorInput input = (SessionEditorInput) ((SessionEditor) part)
+							.getEditorInput();
+					input.setReconnectAction(reconnectAction);
+					input.setDisconnectAction(disconnectAction);
+				}
+			}
+		});
 	}
 
 	@Override

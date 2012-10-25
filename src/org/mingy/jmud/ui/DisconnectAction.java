@@ -3,8 +3,6 @@ package org.mingy.jmud.ui;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.mingy.jmud.Activator;
 import org.mingy.jmud.client.IMudClient;
@@ -27,36 +25,7 @@ public class DisconnectAction extends Action {
 		setImageDescriptor(Activator
 				.getImageDescriptor("/icons/offline_16.gif"));
 		setEnabled(false);
-		window.addPageListener(new PageAdapter() {
-			@Override
-			public void pageOpened(IWorkbenchPage page) {
-				page.addPartListener(partListener);
-			}
-
-			@Override
-			public void pageClosed(IWorkbenchPage page) {
-				page.removePartListener(partListener);
-			}
-		});
 	}
-
-	private PartAdapter partListener = new PartAdapter() {
-		@Override
-		public void partActivated(IWorkbenchPart part) {
-			if (part instanceof SessionEditor) {
-				SessionEditorInput input = (SessionEditorInput) ((SessionEditor) part)
-						.getEditorInput();
-				setEnabled(input.getClient().isConnected());
-			}
-		}
-
-		@Override
-		public void partClosed(IWorkbenchPart part) {
-			if (part instanceof SessionEditor) {
-				setEnabled(false);
-			}
-		}
-	};
 
 	@Override
 	public void run() {

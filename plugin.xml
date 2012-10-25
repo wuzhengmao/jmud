@@ -23,6 +23,7 @@
          point="org.eclipse.ui.editors">
       <editor
             class="org.mingy.jmud.ui.SessionEditor"
+            contributorClass="org.mingy.jmud.ui.SessionEditorContributor"
             id="org.mingy.jmud.ui.SessionEditor"
             name="New Session">
       </editor>
@@ -84,10 +85,6 @@
       <product
             application="org.mingy.jmud.application"
             name="Java Mud Client">
-         <property
-               name="appName"
-               value="Java Mud Client">
-         </property>
          <property
                name="aboutText"
                value="RCP mud client created by PDE">
