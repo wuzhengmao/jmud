@@ -31,6 +31,29 @@ public interface IMudClient {
 	boolean isConnected();
 
 	/**
+	 * 返回客户端是否已断开。
+	 * 
+	 * @return true为已断开
+	 */
+	boolean isDisconnected();
+
+	/**
+	 * 添加连接状态监听器。
+	 * 
+	 * @param listener
+	 *            连接状态监听器
+	 */
+	void addConnectionStateListener(IConnectionStateListener listener);
+
+	/**
+	 * 移除连接状态监听器。
+	 * 
+	 * @param listener
+	 *            连接状态监听器
+	 */
+	void removeConnectionStateListener(IConnectionStateListener listener);
+
+	/**
 	 * 以指定样式显示一段文本。
 	 * 
 	 * @param text

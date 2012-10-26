@@ -3,6 +3,7 @@ package org.mingy.jmud.ui;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -11,9 +12,14 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IPartService;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
+import org.mingy.jmud.Activator;
+import org.mingy.jmud.client.ConnectionEvent;
+import org.mingy.jmud.client.ConnectionStates;
+import org.mingy.jmud.client.IConnectionStateListener;
 import org.mingy.jmud.client.IMudClient;
 import org.mingy.jmud.client.MudClient;
 import org.mingy.jmud.model.Session;
@@ -58,8 +64,28 @@ public class SessionEditor extends EditorPart {
 		if (session.getFont() != null)
 			styledText.setFont(session.getFont());
 
+		final Image onlineImage = Activator.getImageDescriptor(
+				"/icons/online_16.gif").createImage();
+		final Image offlineImage = Activator.getImageDescriptor(
+				"/icons/offline_16.gif").createImage();
+
 		final IMudClient mc = new MudClient(session, styledText, text);
 		input.setClient(mc);
+		mc.addConnectionStateListener(new IConnectionStateListener() {
+			@Override
+			public void onStateChanged(ConnectionEvent event) {
+				if (isActive()) {
+					final boolean offline = event.getNewState() == ConnectionStates.DISCONNECTED;
+					input.getDisconnectAction().setEnabled(!offline);
+					getSite().getShell().getDisplay().syncExec(new Runnable() {
+						@Override
+						public void run() {
+							setTitleImage(offline ? offlineImage : onlineImage);
+						}
+					});
+				}
+			}
+		});
 		mc.connect();
 
 		IPartService service = (IPartService) getSite().getService(
@@ -71,6 +97,11 @@ public class SessionEditor extends EditorPart {
 					mc.close();
 			}
 		});
+	}
+
+	private boolean isActive() {
+		IWorkbenchPage page = getSite().getPage();
+		return page != null && page.getActiveEditor() == this;
 	}
 
 	@Override

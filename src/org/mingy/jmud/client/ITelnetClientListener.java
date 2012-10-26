@@ -6,7 +6,7 @@ package org.mingy.jmud.client;
  * @author Mingy
  * @since 1.0.0
  */
-public interface TelnetClientListener {
+public interface ITelnetClientListener {
 
 	/**
 	 * 与主机建立连接后回调。

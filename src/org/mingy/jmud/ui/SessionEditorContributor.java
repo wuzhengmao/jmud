@@ -26,7 +26,7 @@ public class SessionEditorContributor implements IEditorActionBarContributor {
 				disconnectAction = input.getDisconnectAction();
 			}
 			reconnectAction.setEnabled(true);
-			disconnectAction.setEnabled(input.getClient().isConnected());
+			disconnectAction.setEnabled(!input.getClient().isDisconnected());
 		} else {
 			reconnectAction.setEnabled(false);
 			disconnectAction.setEnabled(false);

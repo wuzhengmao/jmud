@@ -23,6 +23,8 @@ public class ReconnectAction extends Action {
 		this.window = window;
 		setId(ICommandIds.CMD_RECONNECT);
 		setImageDescriptor(Activator.getImageDescriptor("/icons/online_16.gif"));
+		setDisabledImageDescriptor(Activator
+				.getImageDescriptor("/icons/online_disabled_16.gif"));
 		setEnabled(false);
 	}
 
@@ -41,8 +43,9 @@ public class ReconnectAction extends Action {
 						"Reconnect to " + session.getHost() + ":"
 								+ session.getPort() + " ?"))
 					return;
-				client.disconnect();
 			}
+			if (!client.isDisconnected())
+				client.disconnect();
 			client.connect();
 		}
 	}

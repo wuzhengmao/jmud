@@ -24,6 +24,8 @@ public class DisconnectAction extends Action {
 		setId(ICommandIds.CMD_DISCONNECT);
 		setImageDescriptor(Activator
 				.getImageDescriptor("/icons/offline_16.gif"));
+		setDisabledImageDescriptor(Activator
+				.getImageDescriptor("/icons/offline_disabled_16.gif"));
 		setEnabled(false);
 	}
 
@@ -34,7 +36,7 @@ public class DisconnectAction extends Action {
 			SessionEditorInput input = (SessionEditorInput) part
 					.getEditorInput();
 			Session session = input.getSession();
-			IMudClient client = input.getClient();
+			final IMudClient client = input.getClient();
 			if (client.isConnected()) {
 				if (!MessageDialog.openQuestion(
 						window.getShell(),
@@ -42,8 +44,9 @@ public class DisconnectAction extends Action {
 						"Disconnect from " + session.getHost() + ":"
 								+ session.getPort() + " ?"))
 					return;
-				client.disconnect();
 			}
+			if (!client.isDisconnected())
+				client.disconnect();
 		}
 	}
 }

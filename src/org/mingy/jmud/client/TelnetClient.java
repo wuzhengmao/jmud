@@ -3,6 +3,7 @@ package org.mingy.jmud.client;
 import static org.jboss.netty.channel.Channels.pipeline;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.logging.Log;
@@ -35,6 +36,9 @@ public class TelnetClient {
 	/** 日志 */
 	private static final Log logger = LogFactory.getLog(TelnetClient.class);
 
+	/** 执行线程 */
+	private static final ExecutorService executor;
+
 	/** 关闭状态 */
 	public static int STATE_CLOSED = 0;
 	/** 连接中状态 */
@@ -55,9 +59,13 @@ public class TelnetClient {
 	/** 最后一次发送数据的结果 */
 	private ChannelFuture writeFuture;
 	/** 监听器 */
-	private TelnetClientListener listener;
+	private ITelnetClientListener listener;
 	/** 状态 */
 	private int state = STATE_CLOSED;
+
+	static {
+		executor = Executors.newSingleThreadExecutor();
+	}
 
 	/**
 	 * 构造器。
@@ -69,7 +77,8 @@ public class TelnetClient {
 	 * @param listener
 	 *            监听器
 	 */
-	public TelnetClient(String hostname, int port, TelnetClientListener listener) {
+	public TelnetClient(String hostname, int port,
+			ITelnetClientListener listener) {
 		this.hostname = hostname;
 		this.port = port;
 		this.listener = listener;
@@ -78,7 +87,7 @@ public class TelnetClient {
 	/**
 	 * 开始连接。
 	 * <p>
-	 * 异步操作，连接成功后会回调{@link TelnetClientListener#onConnected()}方法。
+	 * 异步操作，连接成功后会回调{@link ITelnetClientListener#onConnected()}方法。
 	 * </p>
 	 * 
 	 * @param timeout
@@ -100,22 +109,13 @@ public class TelnetClient {
 			}
 		});
 		bootstrap.setOption("connectTimeoutMillis", timeout);
-		ChannelFuture future = bootstrap.connect(new InetSocketAddress(
-				hostname, port));
-		channel = future.awaitUninterruptibly().getChannel();
-		if (!future.isSuccess()) {
-			if (logger.isErrorEnabled()) {
-				logger.error("failed to connect " + hostname + ":" + port,
-						future.getCause());
-			}
-			close();
-		}
+		bootstrap.connect(new InetSocketAddress(hostname, port));
 	}
 
 	/**
 	 * 断开连接并关闭客户端。
 	 * <p>
-	 * 异步操作，连接断开后会回调{@link TelnetClientListener#onDisconnected()}方法。
+	 * 异步操作，连接断开后会回调{@link ITelnetClientListener#onDisconnected()}方法。
 	 * </p>
 	 * 
 	 * @param timeout
@@ -124,7 +124,13 @@ public class TelnetClient {
 	public void close() {
 		closeInternal();
 		if (bootstrap != null) {
-			bootstrap.releaseExternalResources();
+			final ClientBootstrap cb = bootstrap;
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					cb.releaseExternalResources();
+				}
+			});
 			bootstrap = null;
 		}
 	}
@@ -141,23 +147,39 @@ public class TelnetClient {
 	/**
 	 * 是否连接已建立。
 	 * 
-	 * @return true是才能收发数据
+	 * @return true时才能收发数据
 	 */
 	public boolean isAvailable() {
 		return state == STATE_CONNECTED;
 	}
 
+	/**
+	 * 是否连接已断开。
+	 * 
+	 * @return true时连接正在关闭或已关闭
+	 */
+	public boolean isDisconnected() {
+		return state == STATE_CLOSING || state == STATE_CLOSED;
+	}
+
 	private boolean closeInternal() {
-		if (state == STATE_CLOSING || state == STATE_CLOSED)
+		if (isDisconnected())
 			return false;
 		state = STATE_CLOSING;
 		onDisconnected();
-		if (writeFuture != null) {
-			writeFuture.awaitUninterruptibly();
+		if (writeFuture != null || channel != null) {
+			final ChannelFuture wf = writeFuture;
+			final Channel ch = channel;
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					if (wf != null)
+						wf.awaitUninterruptibly();
+					if (ch != null)
+						ch.close();
+				}
+			});
 			writeFuture = null;
-		}
-		if (channel != null) {
-			channel.close().awaitUninterruptibly();
 			channel = null;
 		}
 		state = STATE_CLOSED;
@@ -187,7 +209,7 @@ public class TelnetClient {
 	 *            字节
 	 */
 	public void write(int b) {
-		if (state != STATE_CONNECTED)
+		if (!isAvailable())
 			throw new IllegalStateException("client state: " + state);
 		ChannelBuffer buffer = ChannelBuffers.buffer(1);
 		buffer.writeByte(b);
@@ -201,7 +223,7 @@ public class TelnetClient {
 	 *            字节数组
 	 */
 	public void write(byte[] bytes) {
-		if (state != STATE_CONNECTED)
+		if (!isAvailable())
 			throw new IllegalStateException("client state: " + state);
 		ChannelBuffer buffer = ChannelBuffers.wrappedBuffer(bytes);
 		writeFuture = channel.write(buffer);
@@ -317,6 +339,7 @@ public class TelnetClient {
 			if (logger.isInfoEnabled()) {
 				logger.info("connected to " + hostname + ":" + port);
 			}
+			channel = e.getChannel();
 			onConnected();
 		}
 
@@ -337,8 +360,7 @@ public class TelnetClient {
 		@Override
 		public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
 			if (logger.isWarnEnabled()) {
-				logger.warn("unexpected exception from downstream",
-						e.getCause());
+				logger.warn("exception occured", e.getCause());
 			}
 			closeInternal();
 		}

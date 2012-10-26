@@ -3,8 +3,10 @@ package org.mingy.jmud.client;
 import java.awt.Toolkit;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,7 +40,7 @@ import org.mingy.jmud.model.ShortKey;
  * @author Mingy
  * @since 1.0.0
  */
-public class MudClient implements TelnetClientListener, IMudClient {
+public class MudClient implements ITelnetClientListener, IMudClient {
 
 	/** 日志 */
 	private static final Log logger = LogFactory.getLog(MudClient.class);
@@ -86,6 +88,10 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	private boolean scrolling;
 	/** true时禁止显示接收到的数据 */
 	private boolean echoForbidden;
+	/** 当前连接状态 */
+	private ConnectionStates state;
+	/** 注册连接监听器 */
+	private Set<IConnectionStateListener> listeners;
 
 	/** 是否为MAC操作系统 */
 	private static final boolean IS_MAC;
@@ -122,6 +128,8 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	public void connect() {
 		if (client == null)
 			client = new TelnetClient(hostname, port, this);
+		changeConnectionEvent(ConnectionStates.CONNECTING);
+		echo("Connecting to " + hostname + ":" + port + " ... ", SGR.INFO);
 		client.connect(connectTimeout);
 	}
 
@@ -145,14 +153,41 @@ public class MudClient implements TelnetClientListener, IMudClient {
 	}
 
 	@Override
+	public boolean isDisconnected() {
+		return client == null || client.isDisconnected();
+	}
+
+	@Override
+	public void addConnectionStateListener(IConnectionStateListener listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeConnectionStateListener(IConnectionStateListener listener) {
+		listeners.remove(listener);
+	}
+
+	@Override
 	public void onConnected() {
 		echoForbidden = false;
-		echo("Connected to " + hostname + ":" + port + "\n", SGR.INFO);
+		echo("Connected\n", SGR.INFO);
+		changeConnectionEvent(ConnectionStates.CONNECTED);
 	}
 
 	@Override
 	public void onDisconnected() {
-		// TODO: 重连
+		if (state == ConnectionStates.CONNECTING)
+			echo("Failed\n", SGR.INFO);
+		else
+			echo("Lost connection of " + hostname + ":" + port + "\n", SGR.INFO);
+		changeConnectionEvent(ConnectionStates.DISCONNECTED);
+	}
+
+	private void changeConnectionEvent(ConnectionStates newState) {
+		ConnectionEvent event = new ConnectionEvent(this, state, newState);
+		state = newState;
+		for (IConnectionStateListener listener : listeners)
+			listener.onStateChanged(event);
 	}
 
 	@Override
@@ -227,6 +262,8 @@ public class MudClient implements TelnetClientListener, IMudClient {
 			}
 		});
 		commands = new LinkedList<String>();
+		state = ConnectionStates.DISCONNECTED;
+		listeners = new HashSet<IConnectionStateListener>(4);
 	}
 
 	/**
