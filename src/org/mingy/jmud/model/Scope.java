@@ -153,6 +153,18 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
+	public void reconnect() {
+		disconnect();
+		getClient().connect();
+	}
+
+	@Override
+	public void disconnect() {
+		if (!getClient().isDisconnected())
+			getClient().disconnect();
+	}
+
+	@Override
 	public void echoText(String text, String style) {
 		getClient().echo(text, style);
 	}

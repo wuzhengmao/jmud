@@ -87,6 +87,16 @@ public interface IScope {
 	void setEnabled(boolean enabled);
 
 	/**
+	 * 重新连接主机。
+	 */
+	void reconnect();
+
+	/**
+	 * 从主机断开连接。
+	 */
+	void disconnect();
+
+	/**
 	 * 以指定样式回显一段文本，回显的文本不会被触发。
 	 * 
 	 * @param text

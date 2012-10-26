@@ -46,6 +46,8 @@ public abstract class Commands {
 		TYPES.put("#until", UntilCommand.class);
 		TYPES.put("#break", BreakCommand.class);
 		TYPES.put("#skip", SkipCommand.class);
+		TYPES.put("#reconnect", ReconnectCommand.class);
+		TYPES.put("#disconnect", DisconnectCommand.class);
 	}
 
 	/**
