@@ -35,7 +35,8 @@ public class WaitCommand extends Command {
 			try {
 				Thread.sleep(time);
 			} catch (InterruptedException e) {
-				// ignore
+				System.out.println("interrupted");
+				throw e;
 			}
 			if (logger.isTraceEnabled()) {
 				n = System.currentTimeMillis() - n;

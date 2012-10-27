@@ -119,6 +119,9 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 		this.styledText = styledText;
 		this.commandInput = commandInput;
 		this.context = new Context(this);
+		commands = new LinkedList<String>();
+		state = ConnectionStates.DISCONNECTED;
+		listeners = new HashSet<IConnectionStateListener>(4);
 		context.init(session);
 		init();
 		initSGR();
@@ -261,9 +264,6 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 					event.doit = false;
 			}
 		});
-		commands = new LinkedList<String>();
-		state = ConnectionStates.DISCONNECTED;
-		listeners = new HashSet<IConnectionStateListener>(4);
 	}
 
 	/**
@@ -591,12 +591,7 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 				commands.removeFirst();
 			cmdptr = commands.size();
 		}
-		context.runOnInputThread(new Runnable() {
-			@Override
-			public void run() {
-				context.executeScript(command, null);
-			}
-		});
+		context.executeScript(command, null);
 	}
 
 	@Override

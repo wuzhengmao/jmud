@@ -12,18 +12,11 @@ import java.util.TimerTask;
  */
 public class Timers {
 
-	/** 定时服务 */
-	static final java.util.Timer TIMER;
-
 	/** 所有的定时器 */
 	private final Map<String, Timer> ALL;
 
 	/** 上下文 */
 	private final IScope scope;
-
-	static {
-		TIMER = new java.util.Timer(true);
-	}
 
 	/**
 	 * 构造器。
@@ -122,7 +115,7 @@ public class Timers {
 			timer.setStart(tick > 0);
 			if (timer.isStart()) {
 				timer.task = new Task(timer);
-				TIMER.scheduleAtFixedRate(timer.task, tick, tick);
+				scope.scheduleRun(timer.task, tick);
 			}
 		}
 		return timer;
@@ -144,8 +137,7 @@ public class Timers {
 			timer.setStart(!timer.isStart());
 			if (timer.isStart()) {
 				timer.task = new Task(timer);
-				TIMER.scheduleAtFixedRate(timer.task, timer.getTick(),
-						timer.getTick());
+				scope.scheduleRun(timer.task, timer.getTick());
 			}
 		}
 		return timer;
@@ -164,15 +156,9 @@ public class Timers {
 
 		@Override
 		public void run() {
-			final IExecution execution = timer.getExecution();
-			if (execution != null) {
-				scope.runOnWorkThread(new Runnable() {
-					@Override
-					public void run() {
-						scope.execute(execution, null);
-					}
-				});
-			}
+			IExecution execution = timer.getExecution();
+			if (execution != null)
+				scope.execute(execution, null);
 		}
 	}
 }

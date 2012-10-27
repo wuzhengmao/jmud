@@ -1,6 +1,6 @@
 package org.mingy.jmud.model;
 
-import org.mingy.jmud.model.Timers.Task;
+import java.util.TimerTask;
 
 /**
  * 定时器。
@@ -23,7 +23,7 @@ public class Timer {
 	private boolean start;
 
 	/** 定时任务 */
-	Task task;
+	TimerTask task;
 
 	/**
 	 * 构造器。

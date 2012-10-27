@@ -2,6 +2,9 @@ package org.mingy.jmud.model;
 
 /**
  * 断开连接指令。
+ * <p>
+ * Usage: #disconnect
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0

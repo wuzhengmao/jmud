@@ -48,6 +48,9 @@ public abstract class Commands {
 		TYPES.put("#skip", SkipCommand.class);
 		TYPES.put("#reconnect", ReconnectCommand.class);
 		TYPES.put("#disconnect", DisconnectCommand.class);
+		TYPES.put("#sh", ShowCommand.class);
+		TYPES.put("#show", ShowCommand.class);
+		TYPES.put("#echo", EchoCommand.class);
 	}
 
 	/**

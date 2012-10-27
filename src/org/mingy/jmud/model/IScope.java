@@ -1,6 +1,7 @@
 package org.mingy.jmud.model;
 
 import java.util.Collection;
+import java.util.TimerTask;
 
 /**
  * 模块化的上下文。
@@ -97,6 +98,16 @@ public interface IScope {
 	void disconnect();
 
 	/**
+	 * 以指定样式显示一段文本，显示的文本会被触发。
+	 * 
+	 * @param text
+	 *            文本
+	 * @param style
+	 *            SGR样式，null时使用当前样式
+	 */
+	void showText(String text, String style);
+
+	/**
 	 * 以指定样式回显一段文本，回显的文本不会被触发。
 	 * 
 	 * @param text
@@ -123,15 +134,17 @@ public interface IScope {
 	void runOnWorkThread(Runnable runnable);
 
 	/**
-	 * 在输入线程中执行。
+	 * 定时执行任务。
 	 * 
-	 * @param runnable
-	 *            可执行任务
+	 * @param task
+	 *            定时任务
+	 * @param period
+	 *            定时周期（毫秒）
 	 */
-	void runOnInputThread(Runnable runnable);
+	void scheduleRun(TimerTask task, long period);
 
 	/**
-	 * 执行一段逻辑。
+	 * 在工作线程中执行一段逻辑。
 	 * 
 	 * @param execution
 	 *            执行逻辑
@@ -141,7 +154,7 @@ public interface IScope {
 	void execute(IExecution execution, String[] args);
 
 	/**
-	 * 执行脚本。
+	 * 在工作线程中执行脚本。
 	 * 
 	 * @param script
 	 *            脚本

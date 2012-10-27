@@ -1,14 +1,22 @@
 package org.mingy.jmud.model;
 
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import org.mingy.jmud.client.ConnectionEvent;
+import org.mingy.jmud.client.ConnectionStates;
+import org.mingy.jmud.client.IConnectionStateListener;
 import org.mingy.jmud.client.IMudClient;
+import org.mingy.jmud.client.SGR;
 import org.mingy.jmud.model.Triggers.Line;
+import org.mingy.jmud.util.WorkThreadFactory;
 
 /**
  * 上下文。
@@ -22,8 +30,6 @@ public class Context extends Scope {
 	private static final int MAX_LINES = 10;
 	/** 最大的工作线程数 */
 	private static final int MAX_WORK_THREADS = 20;
-	/** 最大的输入线程数 */
-	private static final int MAX_INPUT_THREADS = 3;
 
 	/** MUD客户端 */
 	private IMudClient client;
@@ -35,8 +41,8 @@ public class Context extends Scope {
 	private Line last;
 	/** 工作线程池 */
 	private ExecutorService workThreadPool;
-	/** 输入线程池 */
-	private ExecutorService inputThreadPool;
+	/** 定时服务 */
+	private java.util.Timer timerService;
 
 	/**
 	 * 构造器。
@@ -49,8 +55,11 @@ public class Context extends Scope {
 		this.client = client;
 		JSEngine = new ScriptEngineManager().getEngineByName("JavaScript");
 		shortKeys = new ShortKeys();
-		workThreadPool = Executors.newFixedThreadPool(MAX_WORK_THREADS);
-		inputThreadPool = Executors.newFixedThreadPool(MAX_INPUT_THREADS);
+		workThreadPool = new ThreadPoolExecutor(MAX_WORK_THREADS,
+				MAX_WORK_THREADS, 0L, TimeUnit.MILLISECONDS,
+				new LinkedBlockingQueue<Runnable>(),
+				WorkThreadFactory.getInstance());
+		timerService = new java.util.Timer(true);
 	}
 
 	@Override
@@ -101,9 +110,33 @@ public class Context extends Scope {
 		} catch (ScriptException e) {
 			throw new RuntimeException(e);
 		}
-		Scope module = addChild(Modules.LOGIN_MODULE);
-		module.setVariable("character", session.getCharacter());
-		module.setVariable("password", session.getPassword());
+		final Scope module = addChild(Constants.MODULE_LOGIN);
+		module.setVariable(Constants.VAR_CHARACTER, session.getCharacter());
+		module.setVariable(Constants.VAR_PASSWORD, session.getPassword());
+		module.setAlias(
+				Constants.ALIAS_ON_DISCONNECTED,
+				"#sh {"
+						+ SGR.INFO
+						+ "} {\\nRetry connect after 10 seconds ...\\n};#set i 10;#while {true} {#wait 1000;#if {state < 2} {#return};#set i {i - 1};#if {i == 0} {#break};#sh {"
+						+ SGR.INFO + "} {@i ...\\n};};#reconnect;");
+		client.addConnectionStateListener(new IConnectionStateListener() {
+			@Override
+			public void onStateChanged(ConnectionEvent event) {
+				ConnectionStates state = event.getNewState();
+				module.setVariable(Constants.VAR_CONNECTION_STATE,
+						state.ordinal());
+				if (state == ConnectionStates.CONNECTED) {
+					Alias alias = module.getAlias(Constants.ALIAS_ON_CONNECTED);
+					if (alias != null)
+						module.execute(alias.getExecution(), null);
+				} else if (state == ConnectionStates.DISCONNECTED) {
+					Alias alias = module
+							.getAlias(Constants.ALIAS_ON_DISCONNECTED);
+					if (alias != null)
+						module.execute(alias.getExecution(), null);
+				}
+			}
+		});
 		if (session.getConfiguration() != null)
 			session.getConfiguration().inject(this);
 	}
@@ -112,9 +145,8 @@ public class Context extends Scope {
 	 * 销毁。
 	 */
 	public void destroy() {
-		Timers.TIMER.cancel();
+		timerService.cancel();
 		workThreadPool.shutdownNow();
-		inputThreadPool.shutdownNow();
 	}
 
 	/**
@@ -152,11 +184,14 @@ public class Context extends Scope {
 
 	@Override
 	public void runOnWorkThread(Runnable runnable) {
-		workThreadPool.execute(runnable);
+		if (WorkThreadFactory.inWorkThread())
+			runnable.run();
+		else
+			workThreadPool.execute(runnable);
 	}
 
 	@Override
-	public void runOnInputThread(Runnable runnable) {
-		inputThreadPool.execute(runnable);
+	public void scheduleRun(TimerTask task, long period) {
+		timerService.scheduleAtFixedRate(task, period, period);
 	}
 }

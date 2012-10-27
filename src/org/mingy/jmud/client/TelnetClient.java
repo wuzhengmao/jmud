@@ -36,6 +36,8 @@ public class TelnetClient {
 	/** 日志 */
 	private static final Log logger = LogFactory.getLog(TelnetClient.class);
 
+	/** 最大的连接线程数 */
+	private static final int CONNECTION_THREADS = 5;
 	/** 执行线程 */
 	private static final ExecutorService executor;
 
@@ -64,7 +66,7 @@ public class TelnetClient {
 	private int state = STATE_CLOSED;
 
 	static {
-		executor = Executors.newSingleThreadExecutor();
+		executor = Executors.newFixedThreadPool(CONNECTION_THREADS);
 	}
 
 	/**
@@ -109,7 +111,12 @@ public class TelnetClient {
 			}
 		});
 		bootstrap.setOption("connectTimeoutMillis", timeout);
-		bootstrap.connect(new InetSocketAddress(hostname, port));
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				bootstrap.connect(new InetSocketAddress(hostname, port));
+			}
+		});
 	}
 
 	/**
@@ -166,7 +173,6 @@ public class TelnetClient {
 		if (isDisconnected())
 			return false;
 		state = STATE_CLOSING;
-		onDisconnected();
 		if (writeFuture != null || channel != null) {
 			final ChannelFuture wf = writeFuture;
 			final Channel ch = channel;
@@ -183,6 +189,7 @@ public class TelnetClient {
 			channel = null;
 		}
 		state = STATE_CLOSED;
+		onDisconnected();
 		return true;
 	}
 

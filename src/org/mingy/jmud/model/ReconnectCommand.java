@@ -2,6 +2,9 @@ package org.mingy.jmud.model;
 
 /**
  * 重新连线指令。
+ * <p>
+ * Usage: #reconnect
+ * </p>
  * 
  * @author Mingy
  * @since 1.0.0

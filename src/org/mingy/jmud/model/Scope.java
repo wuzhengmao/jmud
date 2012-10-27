@@ -3,6 +3,7 @@ package org.mingy.jmud.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimerTask;
 
 import javax.script.ScriptEngine;
 
@@ -165,6 +166,11 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
+	public void showText(String text, String style) {
+		getClient().show(text, style, false);
+	}
+
+	@Override
 	public void echoText(String text, String style) {
 		getClient().echo(text, style);
 	}
@@ -180,17 +186,22 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public void runOnInputThread(Runnable runnable) {
-		getContext().runOnInputThread(runnable);
+	public void scheduleRun(TimerTask task, long period) {
+		getContext().scheduleRun(task, period);
 	}
 
 	@Override
-	public void execute(IExecution execution, String[] args) {
-		try {
-			execution.execute(this, args);
-		} catch (InterruptExecutionException e) {
-			// ignore
-		}
+	public void execute(final IExecution execution, final String[] args) {
+		runOnWorkThread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					execution.execute(Scope.this, args);
+				} catch (InterruptExecutionException e) {
+					// ignore
+				}
+			}
+		});
 	}
 
 	@Override

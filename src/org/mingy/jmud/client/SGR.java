@@ -10,7 +10,7 @@ package org.mingy.jmud.client;
 public class SGR {
 
 	/** ESC */
-	private static final String ESC = new String(new byte[] { 27 });
+	public static final String ESC = new String(new byte[] { 27 });
 
 	/** 默认的文字颜色 */
 	public static final String DEFAULT = ESC + "[0m";
@@ -20,6 +20,41 @@ public class SGR {
 	public static final String INFO = ESC + "[1;36m";
 	/** 错误信息的颜色 */
 	public static final String ERROR = ESC + "[1;31;47m";
+
+	/** 黑色 */
+	public static final String BLACK = "BLK";
+	/** 红色 */
+	public static final String RED = "RED";
+	/** 绿色 */
+	public static final String GREEN = "GRN";
+	/** 土黄色 */
+	public static final String YELLOW = "YEL";
+	/** 深蓝色 */
+	public static final String BLUE = "BLU";
+	/** 浅紫色 */
+	public static final String MAGENTA = "MAG";
+	/** 蓝绿色 */
+	public static final String CYAN = "CYN";
+	/** 浅灰色 */
+	public static final String LIGHT_GRAY = "WHT";
+	/** 深灰色 */
+	public static final String DARK_GRAY = "HID";
+	/** 亮红色 */
+	public static final String BRIGHT_RED = "HIR";
+	/** 亮绿色 */
+	public static final String BRIGHT_GREEN = "HIG";
+	/** 黄色 */
+	public static final String BRIGHT_YELLOW = "HIY";
+	/** 蓝色 */
+	public static final String BRIGHT_BLUE = "HIB";
+	/** 粉红色 */
+	public static final String PINK = "HIM";
+	/** 天青色 */
+	public static final String BRIGHT_CYAN = "HIC";
+	/** 白色 */
+	public static final String WHITE = "HIW";
+	/** 默认色 */
+	public static final String NORMAL = "NOR";
 
 	private static int DEFAULT_BACKGROUND_COLOR_INDEX = 0;
 	private static int DEFAULT_TEXT_COLOR_INDEX = 2;

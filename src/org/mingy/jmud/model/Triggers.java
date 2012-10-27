@@ -194,15 +194,9 @@ public class Triggers {
 							: 0);
 					if (args != null) {
 						line.ptrs.put(id, line.text.length());
-						final IExecution execution = trigger.getExecution();
-						if (execution != null) {
-							scope.runOnWorkThread(new Runnable() {
-								@Override
-								public void run() {
-									scope.execute(execution, args);
-								}
-							});
-						}
+						IExecution execution = trigger.getExecution();
+						if (execution != null)
+							scope.execute(execution, args);
 					}
 				} else {
 					line.ptrs.put(id, line.text.length());
