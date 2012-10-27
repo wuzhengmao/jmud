@@ -199,6 +199,12 @@ public abstract class Scope implements IScope {
 					execution.execute(Scope.this, args);
 				} catch (InterruptExecutionException e) {
 					// ignore
+				} catch (InterruptedException e) {
+					// ignore
+				} catch (RuntimeException e) {
+					if (logger.isErrorEnabled()) {
+						logger.error("error on execute", e);
+					}
 				}
 			}
 		});
@@ -206,6 +212,7 @@ public abstract class Scope implements IScope {
 
 	@Override
 	public void executeScript(String script, String[] args) {
+		ScopeBindings.resetLocalVariables();
 		execute(new Script(script), args);
 	}
 
@@ -220,19 +227,27 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public Object setVariable(String name, Object value) {
+	public Object setVariable(String name, Object value, boolean local) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("[" + getName() + "] VAR[+]: " + name + " = " + value);
+			logger.debug("[" + getName() + "] VAR[+]: " + name + " = " + value
+					+ (local ? " (LOCAL)" : ""));
 		}
-		return getVariables().put(name, value);
+		if (local)
+			return ScopeBindings.setLocalVariable(name, value);
+		else
+			return getVariables().put(name, value);
 	}
 
 	@Override
-	public Object removeVariable(String name) {
+	public Object removeVariable(String name, boolean local) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("[" + getName() + "] VAR[-]: " + name);
+			logger.debug("[" + getName() + "] VAR[-]: " + name
+					+ (local ? " (LOCAL)" : ""));
 		}
-		return getVariables().remove(name);
+		if (local)
+			return ScopeBindings.removeLocalVariable(name);
+		else
+			return getVariables().remove(name);
 	}
 
 	@Override

@@ -30,6 +30,7 @@ public abstract class Commands {
 		TYPES.put("#m+", ModuleCommand.class);
 		TYPES.put("#m-", ModuleCommand.class);
 		TYPES.put("#set", SetCommand.class);
+		TYPES.put("#var", VarCommand.class);
 		TYPES.put("#al", AliasCommand.class);
 		TYPES.put("#alias", AliasCommand.class);
 		TYPES.put("#t+", TriggerCommand.class);

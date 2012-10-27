@@ -13,7 +13,7 @@ public class TestConfiguration extends Configuration {
 	@Override
 	public void inject(Context context) {
 		super.inject(context);
-		context.setVariable("i", "hello");
+		context.setVariable("i", "hello", false);
 		context.setAlias("lc", "l corpse");
 		context.setAlias(
 				"while",

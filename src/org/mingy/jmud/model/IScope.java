@@ -189,18 +189,22 @@ public interface IScope {
 	 *            变量名
 	 * @param value
 	 *            变量值
+	 * @param local
+	 *            true时为临时变量
 	 * @return 原先的变量值
 	 */
-	Object setVariable(String name, Object value);
+	Object setVariable(String name, Object value, boolean local);
 
 	/**
 	 * 移除一个变量。
 	 * 
 	 * @param name
 	 *            变量名
+	 * @param local
+	 *            true时为临时变量
 	 * @return 变量值，变量不存在时返回null
 	 */
-	Object removeVariable(String name);
+	Object removeVariable(String name, boolean local);
 
 	/**
 	 * 取得一个定义的快捷键。

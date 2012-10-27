@@ -32,12 +32,7 @@ public class WaitCommand extends Command {
 				logger.trace("waiting " + time + "ms ...");
 				n = System.currentTimeMillis();
 			}
-			try {
-				Thread.sleep(time);
-			} catch (InterruptedException e) {
-				System.out.println("interrupted");
-				throw e;
-			}
+			Thread.sleep(time);
 			if (logger.isTraceEnabled()) {
 				n = System.currentTimeMillis() - n;
 				logger.trace("wait over, cost " + n + "ms");

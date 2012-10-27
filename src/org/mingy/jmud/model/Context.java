@@ -14,7 +14,6 @@ import org.mingy.jmud.client.ConnectionEvent;
 import org.mingy.jmud.client.ConnectionStates;
 import org.mingy.jmud.client.IConnectionStateListener;
 import org.mingy.jmud.client.IMudClient;
-import org.mingy.jmud.client.SGR;
 import org.mingy.jmud.model.Triggers.Line;
 import org.mingy.jmud.util.WorkThreadFactory;
 
@@ -111,20 +110,18 @@ public class Context extends Scope {
 			throw new RuntimeException(e);
 		}
 		final Scope module = addChild(Constants.MODULE_LOGIN);
-		module.setVariable(Constants.VAR_CHARACTER, session.getCharacter());
-		module.setVariable(Constants.VAR_PASSWORD, session.getPassword());
+		module.setVariable(Constants.VAR_CHARACTER, session.getCharacter(),
+				false);
+		module.setVariable(Constants.VAR_PASSWORD, session.getPassword(), false);
 		module.setAlias(
 				Constants.ALIAS_ON_DISCONNECTED,
-				"#sh {"
-						+ SGR.INFO
-						+ "} {\\nRetry connect after 10 seconds ...\\n};#set i 10;#while {true} {#wait 1000;#if {state < 2} {#return};#set i {i - 1};#if {i == 0} {#break};#sh {"
-						+ SGR.INFO + "} {@i ...\\n};};#reconnect;");
+				"#echo {\\nRetry connect after 10 seconds ...\\n};#var i 10;#while {true} {#wait 1000;#if {state < 2} {#return};#var i {i - 1};#if {i == 0} {#break};#echo {@i ...\\n};};#reconnect;");
 		client.addConnectionStateListener(new IConnectionStateListener() {
 			@Override
 			public void onStateChanged(ConnectionEvent event) {
 				ConnectionStates state = event.getNewState();
 				module.setVariable(Constants.VAR_CONNECTION_STATE,
-						state.ordinal());
+						state.ordinal(), false);
 				if (state == ConnectionStates.CONNECTED) {
 					Alias alias = module.getAlias(Constants.ALIAS_ON_CONNECTED);
 					if (alias != null)

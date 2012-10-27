@@ -147,7 +147,9 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 	@Override
 	public void close() {
 		disconnect();
+		listeners.clear();
 		context.destroy();
+		context = null;
 	}
 
 	@Override
@@ -605,11 +607,11 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 
 	@Override
 	public void runOnUiThread(final Runnable runnable) {
-		if (client != null && !display.isDisposed()) {
+		if (context != null && !display.isDisposed()) {
 			display.syncExec(new Runnable() {
 				@Override
 				public void run() {
-					if (client != null && !display.isDisposed())
+					if (context != null && !display.isDisposed())
 						runnable.run();
 				}
 			});

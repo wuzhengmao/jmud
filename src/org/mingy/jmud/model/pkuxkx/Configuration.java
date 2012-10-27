@@ -22,7 +22,9 @@ public class Configuration extends org.mingy.jmud.model.Configuration {
 	public void inject(Context context) {
 		context.setShortKey(SWT.KEYPAD_0, "hp");
 		Scope loginModule = context.getScope(Constants.MODULE_LOGIN);
-		loginModule.addTrigger(null, "^您的英文名字（要注册新人物请输入new）：", "@character");
-		loginModule.addTrigger(null, "此ID档案已存在，请输入密码：", "@password");
+		loginModule.addTrigger(null, "^您的英文名字（要注册新人物请输入new）：", "@"
+				+ Constants.VAR_CHARACTER);
+		loginModule.addTrigger(null, "此ID档案已存在，请输入密码：", "@"
+				+ Constants.VAR_PASSWORD);
 	}
 }

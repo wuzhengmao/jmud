@@ -15,6 +15,7 @@ public interface IExecution {
 	 *            上下文
 	 * @param args
 	 *            参数
+	 * @throws InterruptedException
 	 */
-	void execute(IScope scope, String[] args);
+	void execute(IScope scope, String[] args) throws InterruptedException;
 }

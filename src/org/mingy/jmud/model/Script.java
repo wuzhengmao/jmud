@@ -34,7 +34,8 @@ public class Script implements IExecution {
 	}
 
 	@Override
-	public void execute(IScope scope, String[] args) {
+	public void execute(IScope scope, String[] args)
+			throws InterruptedException {
 		if (commands == null || commands.isEmpty())
 			return;
 		for (Command cmd : commands) {
@@ -52,6 +53,8 @@ public class Script implements IExecution {
 					throw (SkipOnceException) e;
 				if (e instanceof BreakLoopException)
 					throw (BreakLoopException) e;
+				if (e instanceof InterruptedException)
+					throw (InterruptedException) e;
 				if (logger.isErrorEnabled()) {
 					logger.error("error on execute: " + cmd.origin, e);
 				}
