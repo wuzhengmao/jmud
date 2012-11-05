@@ -1,5 +1,7 @@
 package org.mingy.jmud.ui;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
@@ -22,11 +24,14 @@ import org.mingy.jmud.client.ConnectionStates;
 import org.mingy.jmud.client.IConnectionStateListener;
 import org.mingy.jmud.client.IMudClient;
 import org.mingy.jmud.client.MudClient;
+import org.mingy.jmud.model.Configuration;
 import org.mingy.jmud.model.Session;
 
 public class SessionEditor extends EditorPart {
 
 	public static final String ID = "org.mingy.jmud.ui.SessionEditor"; //$NON-NLS-1$
+
+	private static final Log logger = LogFactory.getLog(EditorPart.class);
 
 	private StyledText styledText;
 	private Text text;
@@ -92,9 +97,48 @@ public class SessionEditor extends EditorPart {
 				IPartService.class);
 		service.addPartListener(new PartAdapter() {
 			@Override
+			public void partOpened(IWorkbenchPart part) {
+				if (part == SessionEditor.this) {
+					Configuration configuration = input.getSession()
+							.getConfiguration();
+					if (configuration != null
+							&& configuration.getCharacterViewId() != null) {
+						try {
+							input.setCharacterView((CharacterView) getSite()
+									.getPage().showView(
+											configuration.getCharacterViewId(),
+											input.getId(),
+											IWorkbenchPage.VIEW_VISIBLE));
+						} catch (PartInitException e) {
+							if (logger.isErrorEnabled()) {
+								logger.error("error on open character view", e);
+							}
+						}
+					}
+				}
+			}
+
+			@Override
 			public void partClosed(IWorkbenchPart part) {
-				if (part == SessionEditor.this)
+				if (part == SessionEditor.this) {
 					mc.close();
+					if (input.getCharacterView() != null) {
+						getSite().getPage().hideView(input.getCharacterView());
+						input.setCharacterView(null);
+					}
+				} else if (part == input.getCharacterView()) {
+					input.setCharacterView(null);
+				}
+			}
+
+			@Override
+			public void partActivated(IWorkbenchPart part) {
+				if (part == SessionEditor.this) {
+					if (input.getCharacterView() != null) {
+						getSite().getPage()
+								.bringToTop(input.getCharacterView());
+					}
+				}
 			}
 		});
 	}

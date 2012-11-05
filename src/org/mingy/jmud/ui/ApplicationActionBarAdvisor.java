@@ -26,6 +26,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	private NewSessionAction newSessionAction;
 	private ReconnectAction reconnectAction;
 	private DisconnectAction disconnectAction;
+	private OpenCharacterAction openCharacterAction;
 
 	public ApplicationActionBarAdvisor(IActionBarConfigurer configurer) {
 		super(configurer);
@@ -42,7 +43,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 			register(quitAction);
 		}
 		{
-			openConsoleAction = new OpenConsoleAction(window, "Open &Console");
+			openConsoleAction = new OpenConsoleAction(window, "Open Conso&le");
 			register(openConsoleAction);
 		}
 		{
@@ -70,9 +71,27 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 							.getEditorInput();
 					input.setReconnectAction(reconnectAction);
 					input.setDisconnectAction(disconnectAction);
+					openCharacterAction.setEnabled(true);
+				}
+			}
+
+			@Override
+			public void partClosed(IWorkbenchPart part) {
+				if (part instanceof SessionEditor) {
+					if (window.getActivePage() == null
+							|| window.getActivePage().getActiveEditor() == null) {
+						reconnectAction.setEnabled(false);
+						disconnectAction.setEnabled(false);
+						openCharacterAction.setEnabled(false);
+					}
 				}
 			}
 		});
+		{
+			openCharacterAction = new OpenCharacterAction(window,
+					"Open &Character");
+			register(openCharacterAction);
+		}
 	}
 
 	@Override
@@ -93,6 +112,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		fileMenu.add(new Separator());
 		fileMenu.add(quitAction);
 		menuBar.add(windowMenu);
+		windowMenu.add(openCharacterAction);
+		windowMenu.add(new Separator());
 		windowMenu.add(openConsoleAction);
 		menuBar.add(helpMenu);
 		helpMenu.add(aboutAction);
@@ -106,6 +127,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		toolbar.add(new Separator());
 		toolbar.add(reconnectAction);
 		toolbar.add(disconnectAction);
+		toolbar.add(new Separator());
+		toolbar.add(openCharacterAction);
 		toolbar.add(new Separator());
 		toolbar.add(openConsoleAction);
 	}

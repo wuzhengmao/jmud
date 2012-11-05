@@ -2,41 +2,48 @@ package org.mingy.jmud.ui;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 
-public class CharacterView extends ViewPart {
+/**
+ * 角色视图的抽象类。
+ * 
+ * @author Mingy
+ * @since 1.0.0
+ */
+public abstract class CharacterView extends ViewPart {
 
-	public static final String ID = "org.mingy.jmud.ui.CharacterView"; //$NON-NLS-1$
-
-	public CharacterView() {
-	}
+	static final String ID_PATTERN = "org.mingy.jmud.ui.*.CharacterView"; //$NON-NLS-1$
 
 	/**
 	 * Create contents of the view part.
+	 * 
 	 * @param parent
 	 */
 	@Override
 	public void createPartControl(Composite parent) {
-		Composite container = new Composite(parent, SWT.NONE);
-
+		createControls(parent);
 		createActions();
 		initializeToolBar();
 		initializeMenu();
 	}
 
 	/**
+	 * Create contents of the view part.
+	 */
+	protected abstract void createControls(Composite parent);
+
+	/**
 	 * Create the actions.
 	 */
-	private void createActions() {
+	protected void createActions() {
 		// Create the actions
 	}
 
 	/**
 	 * Initialize the toolbar.
 	 */
-	private void initializeToolBar() {
+	protected void initializeToolBar() {
 		IToolBarManager toolbarManager = getViewSite().getActionBars()
 				.getToolBarManager();
 	}
@@ -44,7 +51,7 @@ public class CharacterView extends ViewPart {
 	/**
 	 * Initialize the menu.
 	 */
-	private void initializeMenu() {
+	protected void initializeMenu() {
 		IMenuManager menuManager = getViewSite().getActionBars()
 				.getMenuManager();
 	}
@@ -53,5 +60,4 @@ public class CharacterView extends ViewPart {
 	public void setFocus() {
 		// Set the focus
 	}
-
 }

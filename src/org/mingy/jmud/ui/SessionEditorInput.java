@@ -9,16 +9,21 @@ import org.mingy.jmud.model.Session;
 
 public class SessionEditorInput implements IEditorInput {
 
+	private static int ID_COUNT = 0;
+
+	private String id;
 	private Session session;
 	private IMudClient client;
 	private Action reconnectAction;
 	private Action disconnectAction;
+	private CharacterView characterView;
 
 	public SessionEditorInput(Session session) {
+		this.id = String.valueOf(++ID_COUNT);
 		this.session = session;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Object getAdapter(Class adapter) {
 		return null;
@@ -49,6 +54,10 @@ public class SessionEditorInput implements IEditorInput {
 		return "";
 	}
 
+	public String getId() {
+		return id;
+	}
+
 	public Session getSession() {
 		return session;
 	}
@@ -75,5 +84,13 @@ public class SessionEditorInput implements IEditorInput {
 
 	void setDisconnectAction(Action disconnectAction) {
 		this.disconnectAction = disconnectAction;
+	}
+
+	public CharacterView getCharacterView() {
+		return characterView;
+	}
+
+	void setCharacterView(CharacterView characterView) {
+		this.characterView = characterView;
 	}
 }

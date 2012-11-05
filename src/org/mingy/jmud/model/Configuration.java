@@ -22,4 +22,11 @@ public abstract class Configuration {
 	 *            上下文
 	 */
 	public abstract void inject(Context context);
+
+	/**
+	 * 返回角色视图的ID。
+	 * 
+	 * @return 角色视图ID
+	 */
+	public abstract String getCharacterViewId();
 }

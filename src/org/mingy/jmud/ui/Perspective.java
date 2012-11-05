@@ -15,7 +15,6 @@ public class Perspective implements IPerspectiveFactory {
 				IPageLayout.BOTTOM, 0.7f, editorArea);
 		IFolderLayout characterFolder = layout.createFolder("characters",
 				IPageLayout.RIGHT, 0.7f, editorArea);
-		characterFolder.addPlaceholder(CharacterView.ID + ":*");
-		characterFolder.addView(CharacterView.ID);
+		characterFolder.addPlaceholder(CharacterView.ID_PATTERN + ":*");
 	}
 }

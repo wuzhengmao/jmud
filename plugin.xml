@@ -31,9 +31,10 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            class="org.mingy.jmud.ui.CharacterView"
-            id="org.mingy.jmud.ui.CharacterView"
-            name="New Character">
+            class="org.mingy.jmud.ui.pkuxkx.CharacterView"
+            id="org.mingy.jmud.ui.pkuxkx.CharacterView"
+            name="New Character"
+            allowMultiple="true">
       </view>
    </extension>
    <extension
@@ -63,6 +64,12 @@
             description="Disconnect from current host"
             categoryId="org.mingy.jmud.ui.connection"
             id="org.mingy.jmud.ui.disconnect">
+      </command>
+      <command
+            name="Open Character"
+            description="Opens a character window"
+            categoryId="org.mingy.jmud.ui.assistant"
+            id="org.mingy.jmud.ui.openCharacter">
       </command>
       <command
             name="Open Console"

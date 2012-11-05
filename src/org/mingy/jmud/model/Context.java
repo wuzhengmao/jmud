@@ -113,9 +113,16 @@ public class Context extends Scope {
 		module.setVariable(Constants.VAR_CHARACTER, session.getCharacter(),
 				false);
 		module.setVariable(Constants.VAR_PASSWORD, session.getPassword(), false);
+		module.setAlias(Constants.ALIAS_ON_CONNECTED, "#set "
+				+ Constants.VAR_LOGIN_OK + " 0;#set " + Constants.VAR_IP_RECORD
+				+ " 'N/A';#t+ " + Constants.TRIGGER_GROUP_LOGIN);
 		module.setAlias(
 				Constants.ALIAS_ON_DISCONNECTED,
-				"#echo {\\nRetry connect after 10 seconds ...\\n};#var i 10;#while {true} {#wait 1000;#if {state < 2} {#return};#var i {i - 1};#if {i == 0} {#break};#echo {@i ...\\n};};#reconnect;");
+				"#if {"
+						+ Constants.VAR_IP_RECORD
+						+ " == 'N/A'} {#echo {\\nRetry connect after 10 seconds ...\\n};#var i 10;#while {true} {#wait 1000;#if {"
+						+ Constants.VAR_CONNECTION_STATE
+						+ " < 2} {#return};#var i {i - 1};#if {i == 0} {#break};#echo {@i ...\\n};};#reconnect;}");
 		client.addConnectionStateListener(new IConnectionStateListener() {
 			@Override
 			public void onStateChanged(ConnectionEvent event) {

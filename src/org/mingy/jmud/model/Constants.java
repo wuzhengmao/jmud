@@ -16,6 +16,12 @@ public abstract class Constants {
 
 	/** 密码变量 */
 	public static final String VAR_PASSWORD = "password";
+	
+	/** 登录成功变量 */
+	public static final String VAR_LOGIN_OK = "loginOk";
+	
+	/** 记录被取代IP的变量 */
+	public static final String VAR_IP_RECORD = "ipRecord";
 
 	/** 连接状态变量 */
 	public static final String VAR_CONNECTION_STATE = "state";
@@ -25,4 +31,7 @@ public abstract class Constants {
 
 	/** 连接断开后调用的脚本 */
 	public static final String ALIAS_ON_DISCONNECTED = "onDisconected";
+
+	/** 登录的触发器组 */
+	public static final String TRIGGER_GROUP_LOGIN = "login";
 }
