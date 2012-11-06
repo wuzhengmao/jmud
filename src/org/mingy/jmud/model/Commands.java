@@ -52,6 +52,8 @@ public abstract class Commands {
 		TYPES.put("#sh", ShowCommand.class);
 		TYPES.put("#show", ShowCommand.class);
 		TYPES.put("#echo", EchoCommand.class);
+		TYPES.put("#watch", WatchCommand.class);
+		TYPES.put("#unwatch", UnwatchCommand.class);
 	}
 
 	/**

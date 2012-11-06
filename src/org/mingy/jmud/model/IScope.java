@@ -207,6 +207,75 @@ public interface IScope {
 	Object removeVariable(String name, boolean local);
 
 	/**
+	 * 增加一个变量的监听器。
+	 * 
+	 * @param name
+	 *            变量名
+	 * @param watcher
+	 *            监听器
+	 */
+	void addWatcher(String name, Watcher watcher);
+
+	/**
+	 * 监听变量的变化，执行指定的逻辑。
+	 * 
+	 * @param name
+	 *            变量名
+	 * @param execution
+	 *            执行逻辑
+	 * @return 生成的监听器
+	 */
+	Watcher addWatcher(String name, IExecution execution);
+
+	/**
+	 * 监听变量的变化，执行指定的逻辑。
+	 * 
+	 * @param name
+	 *            变量名
+	 * @param id
+	 *            ID
+	 * @param execution
+	 *            执行逻辑
+	 * @return 生成的监听器
+	 */
+	Watcher addWatcher(String name, String id, IExecution execution);
+
+	/**
+	 * 监听变量的变化，执行指定的脚本。
+	 * 
+	 * @param name
+	 *            变量名
+	 * @param script
+	 *            脚本
+	 * @return 生成的监听器
+	 */
+	Watcher addWatcher(String name, String script);
+
+	/**
+	 * 监听变量的变化，执行指定的脚本。
+	 * 
+	 * @param name
+	 *            变量名
+	 * @param id
+	 *            ID
+	 * @param script
+	 *            脚本
+	 * @return 生成的监听器
+	 */
+	Watcher addWatcher(String name, String id, String script);
+
+	/**
+	 * 移除一个变量的监听器。
+	 * 
+	 * @param name
+	 *            变量名
+	 * @param id
+	 *            ID
+	 * @return 移除的监听器
+	 */
+	Watcher removeWatcher(String name, String id);
+
+	/**
 	 * 取得一个定义的快捷键。
 	 * 
 	 * @param key

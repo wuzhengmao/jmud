@@ -1,36 +1,32 @@
 package org.mingy.jmud.model;
 
-import java.util.regex.Pattern;
-
 /**
- * 赋值的指令。
+ * 添加变量监听的指令。
  * <p>
- * Usage: #set [module]var [expression]
+ * Usage: #watch [module]var [id] [script]
  * </p>
  * 
  * @author Mingy
  * @since 1.0.0
  */
-public class SetCommand extends Command {
-
-	static final Pattern CHECK = Pattern.compile("^[A-Za-z][A-Za-z0-9_]*$");
+public class WatchCommand extends Command {
 
 	@Override
 	protected boolean execute(IScope scope, String header, String[] items,
 			String[] args) throws Exception {
-		if (items.length == 0 || items.length > 2)
+		if (items.length < 2 || items.length > 3)
 			return false;
 		Object[] r = getScopeByPath(scope, items[0]);
 		if (r == null)
 			return false;
 		IScope target = (IScope) r[0];
 		String var = (String) r[1];
-		if (!CHECK.matcher(var).matches())
+		if (!SetCommand.CHECK.matcher(var).matches())
 			return false;
-		if (items.length == 1) {
-			target.removeVariable(var, false);
+		if (items.length == 2) {
+			target.addWatcher(var, items[1]);
 		} else {
-			target.setVariable(var, scope.calcExpression(items[1]), false);
+			target.addWatcher(var, items[1], items[2]);
 		}
 		return true;
 	}

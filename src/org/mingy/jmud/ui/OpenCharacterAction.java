@@ -41,10 +41,16 @@ public class OpenCharacterAction extends Action {
 						.getConfiguration();
 				if (configuration != null
 						&& configuration.getCharacterViewId() != null) {
-					input.setCharacterView((CharacterView) window
-							.getActivePage().showView(
-									configuration.getCharacterViewId(),
-									input.getId(), IWorkbenchPage.VIEW_VISIBLE));
+					CharacterView view = input.getCharacterView();
+					if (view != null) {
+						window.getActivePage().bringToTop(view);
+					} else {
+						view = (CharacterView) window.getActivePage().showView(
+								configuration.getCharacterViewId(), null,
+								IWorkbenchPage.VIEW_VISIBLE);
+						input.setCharacterView(view);
+						view.init(input);
+					}
 				} else {
 					MessageDialog.openWarning(window.getShell(), "Warning",
 							"No window configurated.");

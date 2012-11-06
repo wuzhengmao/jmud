@@ -22,7 +22,7 @@ public class TestConfiguration extends Configuration {
 		Scope module = context.addChild("m");
 		module.addTrigger(
 				null,
-				"^【 精神 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(\\d+)%\\]\\s*【 精力 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\(\\+\\s*(\\d+)\\)$",
+				HP_PATTERN1,
 				"#set i {i + ' ' + %1};#if {i.length > 15} {#return;};#alias test {ok %%*; hi %%*};test @i");
 	}
 }

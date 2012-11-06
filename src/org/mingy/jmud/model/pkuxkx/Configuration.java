@@ -14,6 +14,12 @@ import org.mingy.jmud.ui.pkuxkx.CharacterView;
  */
 public class Configuration extends org.mingy.jmud.model.Configuration {
 
+	public static final String HP_PATTERN1 = "^【 精神 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(\\d+)%\\s*\\]\\s*【 精力 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\(\\+\\s*(\\d+)\\s*\\)$";
+	public static final String HP_PATTERN2 = "^【 气血 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(\\d+)%\\s*\\]\\s*【 内力 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\(\\+\\s*(\\d+)\\s*\\)$";
+	public static final String HP_PATTERN3 = "^【 食物 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(.+)\\s*\\]\\s*【 潜能 】\\s*(\\d+)\\s*$";
+	public static final String HP_PATTERN4 = "^【 饮水 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(.+)\\s*\\]\\s*【 经验 】\\s*(\\d+)\\s*$";
+	public static final String HP_PATTERN5 = "^【 状态 】\\s*(.+)\\s*$";
+
 	@Override
 	public String getName() {
 		return "pkuxkx.net";
@@ -42,6 +48,7 @@ public class Configuration extends org.mingy.jmud.model.Configuration {
 		loginModule.addTrigger(null,
 				"^有人从别处\\(\\s*(\\d+\\.\\d+\\.\\d+\\.\\d+)\\s*\\)连线取代你所控制的人物。$",
 				"#set " + Constants.VAR_IP_RECORD + " '%1'");
+		loginModule.addWatcher(Constants.VAR_LOGIN_OK, "#if {%2 > 0} {hp}");
 	}
 
 	@Override

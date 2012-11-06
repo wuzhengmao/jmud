@@ -2,9 +2,13 @@ package org.mingy.jmud.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+
+import org.mingy.jmud.util.Variables;
 
 /**
  * 支持模块化的{@link Bindings}实现。
@@ -17,18 +21,27 @@ public class ScopeBindings extends SimpleBindings {
 	/** 临时变量 */
 	private static final ThreadLocal<Map<String, Object>> localVariables;
 
+	/** 上下文 */
+	private final IScope scope;
+
 	/** 上级模块的变量 */
 	private ScopeBindings parent;
+
+	/** 监听器 */
+	private ConcurrentMap<String, ConcurrentMap<String, Watcher>> watchers;
 
 	static {
 		localVariables = new ThreadLocal<Map<String, Object>>();
 	}
 
-	public ScopeBindings() {
+	public ScopeBindings(IScope scope) {
 		super();
+		this.scope = scope;
+		watchers = new ConcurrentHashMap<String, ConcurrentMap<String, Watcher>>();
 	}
 
-	public ScopeBindings(ScopeBindings parent) {
+	public ScopeBindings(IScope scope, ScopeBindings parent) {
+		this(scope);
 		this.parent = parent;
 	}
 
@@ -72,12 +85,124 @@ public class ScopeBindings extends SimpleBindings {
 			if (val.doubleValue() == val.longValue())
 				value = val.longValue();
 		}
-		return super.put(key, value);
+		Object old = super.put(key, value);
+		if (!(old == null ? value == null : old.equals(value))) {
+			fireWatcher(key, old, value);
+		}
+		return old;
 	}
 
 	@Override
 	public Object remove(Object key) {
-		return super.remove(key);
+		Object old = super.remove(key);
+		fireWatcher(key, old, null);
+		return old;
+	}
+
+	private void fireWatcher(Object key, Object oldValue, Object newValue) {
+		Map<String, Watcher> map = watchers.get(key);
+		if (map != null && !map.isEmpty()) {
+			for (Watcher watcher : map.values()) {
+				scope.execute(
+						watcher.getExecution(),
+						new String[] { watcher.getId(),
+								Variables.toString(oldValue),
+								Variables.toString(newValue) });
+			}
+		}
+	}
+
+	/**
+	 * 添加一个变量的监听器。
+	 * 
+	 * @param key
+	 *            变量名
+	 * @param watcher
+	 *            监听器
+	 */
+	public void addWatcher(String key, Watcher watcher) {
+		ConcurrentMap<String, Watcher> map = watchers.get(key);
+		if (map == null) {
+			map = new ConcurrentHashMap<String, Watcher>(4);
+			ConcurrentMap<String, Watcher> m = watchers.putIfAbsent(key, map);
+			if (m != null)
+				map = m;
+		}
+		map.put(watcher.getId(), watcher);
+	}
+
+	/**
+	 * 添加一个变量的监听器。
+	 * 
+	 * @param key
+	 *            变量名
+	 * @param execution
+	 *            执行逻辑
+	 * @return 监听器
+	 */
+	public Watcher addWatcher(String key, IExecution execution) {
+		Watcher watcher = new Watcher(execution);
+		addWatcher(key, watcher);
+		return watcher;
+	}
+
+	/**
+	 * 添加一个变量的监听器。
+	 * 
+	 * @param key
+	 *            变量名
+	 * @param id
+	 *            ID
+	 * @param execution
+	 *            执行逻辑
+	 * @return 监听器
+	 */
+	public Watcher addWatcher(String key, String id, IExecution execution) {
+		Watcher watcher = new Watcher(id, execution);
+		addWatcher(key, watcher);
+		return watcher;
+	}
+
+	/**
+	 * 添加一个变量的监听器。
+	 * 
+	 * @param key
+	 *            变量名
+	 * @param script
+	 *            脚本
+	 * @return 监听器
+	 */
+	public Watcher addWatcher(String key, String script) {
+		return addWatcher(key, new Script(script));
+	}
+
+	/**
+	 * 添加一个变量的监听器。
+	 * 
+	 * @param key
+	 *            变量名
+	 * @param id
+	 *            ID
+	 * @param script
+	 *            脚本
+	 * @return 监听器
+	 */
+	public Watcher addWatcher(String key, String id, String script) {
+		return addWatcher(key, id, new Script(script));
+	}
+
+	/**
+	 * 移除一个变量的监听器。
+	 * 
+	 * @param key
+	 *            变量名
+	 * @param id
+	 *            ID
+	 * @return 移除的监听器
+	 */
+	public Watcher removeWatcher(String key, String id) {
+		Map<String, Watcher> map = watchers.get(key);
+		return map != null ? map.remove(id) : null;
 	}
 
 	static void resetLocalVariables() {

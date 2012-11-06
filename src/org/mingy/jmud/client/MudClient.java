@@ -617,4 +617,13 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 			});
 		}
 	}
+
+	/**
+	 * 返回上下文。
+	 * 
+	 * @return 上下文
+	 */
+	public Context getContext() {
+		return context;
+	}
 }

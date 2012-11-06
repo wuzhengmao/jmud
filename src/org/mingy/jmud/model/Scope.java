@@ -36,8 +36,8 @@ public abstract class Scope implements IScope {
 		this.name = name;
 		this.parent = parent;
 		this.children = new HashMap<String, Scope>(8);
-		this.variables = parent != null ? new ScopeBindings(
-				parent.getVariables()) : new ScopeBindings();
+		this.variables = parent != null ? new ScopeBindings(this,
+				parent.getVariables()) : new ScopeBindings(this);
 		this.aliases = parent != null ? new Aliases(parent.getAliases())
 				: new Aliases();
 		this.triggers = new Triggers(this);
@@ -67,8 +67,10 @@ public abstract class Scope implements IScope {
 	public Scope addChild(String name) {
 		if (name == null)
 			throw new NullPointerException("name is null");
-		Scope module = getScope(name);
+		Scope module = getChild(name);
 		if (module == null) {
+			if (getScope(name) != null)
+				throw new IllegalArgumentException("duplicated name: " + name);
 			if (logger.isInfoEnabled()) {
 				logger.info("[" + getName() + "] create module: " + name);
 			}
@@ -248,6 +250,65 @@ public abstract class Scope implements IScope {
 			return ScopeBindings.removeLocalVariable(name);
 		else
 			return getVariables().remove(name);
+	}
+
+	@Override
+	public void addWatcher(String name, Watcher watcher) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] WATCH[+]: " + name + ", "
+					+ watcher);
+		}
+		getVariables().addWatcher(name, watcher);
+	}
+
+	@Override
+	public Watcher addWatcher(String name, IExecution execution) {
+		Watcher watcher = getVariables().addWatcher(name, execution);
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] WATCH[+]: " + name + ", "
+					+ watcher);
+		}
+		return watcher;
+	}
+
+	@Override
+	public Watcher addWatcher(String name, String id, IExecution execution) {
+		Watcher watcher = getVariables().addWatcher(name, id, execution);
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] WATCH[+]: " + name + ", "
+					+ watcher);
+		}
+		return watcher;
+	}
+
+	@Override
+	public Watcher addWatcher(String name, String script) {
+		Watcher watcher = getVariables().addWatcher(name, script);
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] WATCH[+]: " + name + ", "
+					+ watcher);
+		}
+		return watcher;
+	}
+
+	@Override
+	public Watcher addWatcher(String name, String id, String script) {
+		Watcher watcher = getVariables().addWatcher(name, id, script);
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] WATCH[+]: " + name + ", "
+					+ watcher);
+		}
+		return watcher;
+	}
+
+	@Override
+	public Watcher removeWatcher(String name, String id) {
+		Watcher watcher = getVariables().removeWatcher(name, id);
+		if (logger.isDebugEnabled()) {
+			logger.debug("[" + getName() + "] WATCH[-]: " + name + ", "
+					+ watcher);
+		}
+		return watcher;
 	}
 
 	@Override

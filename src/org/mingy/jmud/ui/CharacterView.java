@@ -27,6 +27,8 @@ public abstract class CharacterView extends ViewPart {
 		initializeToolBar();
 		initializeMenu();
 	}
+	
+	protected abstract void init(SessionEditorInput input);
 
 	/**
 	 * Create contents of the view part.

@@ -22,7 +22,6 @@ import org.mingy.jmud.Activator;
 import org.mingy.jmud.client.ConnectionEvent;
 import org.mingy.jmud.client.ConnectionStates;
 import org.mingy.jmud.client.IConnectionStateListener;
-import org.mingy.jmud.client.IMudClient;
 import org.mingy.jmud.client.MudClient;
 import org.mingy.jmud.model.Configuration;
 import org.mingy.jmud.model.Session;
@@ -74,8 +73,9 @@ public class SessionEditor extends EditorPart {
 		final Image offlineImage = Activator.getImageDescriptor(
 				"/icons/offline_16.gif").createImage();
 
-		final IMudClient mc = new MudClient(session, styledText, text);
+		final MudClient mc = new MudClient(session, styledText, text);
 		input.setClient(mc);
+		input.setContext(mc.getContext());
 		mc.addConnectionStateListener(new IConnectionStateListener() {
 			@Override
 			public void onStateChanged(ConnectionEvent event) {
@@ -104,11 +104,12 @@ public class SessionEditor extends EditorPart {
 					if (configuration != null
 							&& configuration.getCharacterViewId() != null) {
 						try {
-							input.setCharacterView((CharacterView) getSite()
+							CharacterView view = (CharacterView) getSite()
 									.getPage().showView(
 											configuration.getCharacterViewId(),
-											input.getId(),
-											IWorkbenchPage.VIEW_VISIBLE));
+											null, IWorkbenchPage.VIEW_VISIBLE);
+							input.setCharacterView(view);
+							view.init(input);
 						} catch (PartInitException e) {
 							if (logger.isErrorEnabled()) {
 								logger.error("error on open character view", e);
