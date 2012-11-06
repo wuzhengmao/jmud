@@ -110,6 +110,40 @@ public class Triggers {
 	}
 
 	/**
+	 * 添加一个简单的触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param regexes
+	 *            多个正则表达式
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增的触发器
+	 */
+	public Trigger add(String group, String[] regexes, IExecution execution) {
+		if (group == null)
+			group = "";
+		Trigger trigger = new SimpleTrigger(regexes, execution);
+		add(group, trigger);
+		return trigger;
+	}
+
+	/**
+	 * 添加一个简单的触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param regexes
+	 *            多个正则表达式
+	 * @param script
+	 *            脚本
+	 * @return 新增的触发器
+	 */
+	public Trigger add(String group, String[] regexes, String script) {
+		return add(group, regexes, new Script(script));
+	}
+
+	/**
 	 * 移除一个触发器。
 	 * 
 	 * @param group
@@ -179,6 +213,7 @@ public class Triggers {
 			for (Entry<Integer, Trigger> entry : group.triggers.entrySet()) {
 				int id = entry.getKey();
 				Trigger trigger = entry.getValue();
+				Line l = line;
 				int n = trigger.requiresLineCount();
 				if (n > 1) {
 					Line prev = line;
@@ -187,13 +222,14 @@ public class Triggers {
 					}
 					if (prev == null)
 						continue;
+					l = prev;
 				}
 				if (group.enabled) {
-					Integer pos = line.ptrs.get(id);
-					final String[] args = trigger.match(line, pos != null ? pos
+					Integer pos = l.ptrs.get(id);
+					final String[] args = trigger.match(l, pos != null ? pos
 							: 0);
 					if (args != null) {
-						line.ptrs.put(id, line.text.length());
+						l.ptrs.put(id, l.text.length());
 						IExecution execution = trigger.getExecution();
 						if (execution != null)
 							scope.execute(execution, args);

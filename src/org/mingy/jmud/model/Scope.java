@@ -420,6 +420,37 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
+	public Trigger addTrigger(String group, String[] regexes,
+			IExecution execution) {
+		Trigger trigger = getTriggers().add(group, regexes, execution);
+		if (trigger != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("["
+						+ getName()
+						+ "] TRIGGER[+]: "
+						+ (group != null && group.length() > 0 ? "(" + group
+								+ ") " : "") + trigger);
+			}
+		}
+		return trigger;
+	}
+
+	@Override
+	public Trigger addTrigger(String group, String[] regexes, String script) {
+		Trigger trigger = getTriggers().add(group, regexes, script);
+		if (trigger != null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("["
+						+ getName()
+						+ "] TRIGGER[+]: "
+						+ (group != null && group.length() > 0 ? "(" + group
+								+ ") " : "") + trigger);
+			}
+		}
+		return trigger;
+	}
+
+	@Override
 	public boolean removeTrigger(String group, Trigger trigger) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("["

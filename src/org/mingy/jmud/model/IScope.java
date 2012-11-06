@@ -400,6 +400,32 @@ public interface IScope {
 	Trigger addTrigger(String group, String regex, String script);
 
 	/**
+	 * 添加一个简单的触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param regexes
+	 *            多个正则表达式
+	 * @param execution
+	 *            执行逻辑
+	 * @return 新增的触发器
+	 */
+	Trigger addTrigger(String group, String[] regexes, IExecution execution);
+
+	/**
+	 * 添加一个简单的触发器。
+	 * 
+	 * @param group
+	 *            组名
+	 * @param regexes
+	 *            多个正则表达式
+	 * @param script
+	 *            脚本
+	 * @return 新增的触发器
+	 */
+	Trigger addTrigger(String group, String[] regexes, String script);
+
+	/**
 	 * 移除一个触发器。
 	 * 
 	 * @param group

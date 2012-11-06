@@ -1,10 +1,9 @@
 package org.mingy.jmud.model;
 
-import java.util.regex.Matcher;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.mingy.jmud.model.Triggers.Line;
 
 /**
@@ -15,14 +14,8 @@ import org.mingy.jmud.model.Triggers.Line;
  */
 public class SimpleTrigger extends Trigger {
 
-	/** 日志 */
-	private static final Log logger = LogFactory.getLog(Trigger.class);
-
-	/** 正则表达式 */
-	private String regex;
-
 	/** 编译后的模板 */
-	private Pattern pattern;
+	private Pattern[] patterns;
 
 	/**
 	 * 构造器。
@@ -32,47 +25,56 @@ public class SimpleTrigger extends Trigger {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	SimpleTrigger(String regex, IExecution execution) {
+	public SimpleTrigger(String regex, IExecution execution) {
 		super(execution);
-		this.regex = regex;
-		this.pattern = Pattern.compile(regex);
+		patterns = new Pattern[] { Pattern.compile(regex) };
+	}
+
+	/**
+	 * 构造器。
+	 * 
+	 * @param regexes
+	 *            多个正则表达式
+	 * @param execution
+	 *            执行逻辑
+	 */
+	public SimpleTrigger(String[] regexes, IExecution execution) {
+		super(execution);
+		patterns = new Pattern[regexes.length];
+		for (int i = 0; i < regexes.length; i++)
+			patterns[i] = Pattern.compile(regexes[i]);
+	}
+
+	@Override
+	public int requiresLineCount() {
+		return patterns.length;
 	}
 
 	@Override
 	public String[] match(Line line, int start) {
-		if (regex.charAt(0) == '^' && start > 0)
+		List<String> result = match(line, start, patterns[0]);
+		if (result == null)
 			return null;
-		if (regex.charAt(regex.length() - 1) == '$'
-				&& !line.getText().endsWith("\n"))
-			return null;
-		Matcher m = pattern.matcher(line.getText().substring(start));
-		if (m.find()) {
-			String[] result = new String[m.groupCount() + 1];
-			result[0] = m.group();
-			for (int i = 1; i < result.length; i++)
-				result[i] = m.group(i);
-			if (logger.isDebugEnabled()) {
-				logger.debug("matches: " + result[0]);
-				for (int i = 1; i < result.length; i++)
-					logger.debug("args[" + i + "] = " + result[i]);
-			}
-			return result;
+		for (int i = 1; i < patterns.length; i++) {
+			line = line.getNext();
+			List<String> r = match(line, 0, patterns[i]);
+			if (r == null)
+				return null;
+			result.set(0, result.get(0) + "\n" + r.get(0));
+			for (int j = 1; j < r.size(); j++)
+				result.add(r.get(j));
 		}
-		return null;
-	}
-
-	/**
-	 * 取得编译后的模板。
-	 * 
-	 * @return 匹配模板
-	 */
-	public Pattern getPattern() {
-		return pattern;
+		if (logger.isDebugEnabled()) {
+			logger.debug("matches: " + result.get(0));
+			for (int i = 1; i < result.size(); i++)
+				logger.debug("args[" + i + "] = " + result.get(i));
+		}
+		return result.toArray(new String[result.size()]);
 	}
 
 	@Override
 	public String toString() {
-		return "SimpleTrigger [regex=" + regex + ", execution="
-				+ getExecution() + "]";
+		return "SimpleTrigger [regex=" + Arrays.toString(patterns)
+				+ ", execution=" + getExecution() + "]";
 	}
 }

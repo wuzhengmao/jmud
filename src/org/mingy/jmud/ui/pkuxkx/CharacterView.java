@@ -26,12 +26,12 @@ public class CharacterView extends org.mingy.jmud.ui.CharacterView {
 	private Composite composite;
 	private Label currentHp;
 	private Label currentHpPercent;
-	private Label maxHp;
-	private Label maxHpPercent;
+	private Label effectiveHp;
+	private Label effectiveHpPercent;
 	private Label currentSp;
 	private Label currentSpPercent;
-	private Label maxSp;
-	private Label maxSpPercent;
+	private Label effectiveSp;
+	private Label effectiveSpPercent;
 	private Label currentForce;
 	private Label currentForcePercent;
 	private Label maxForce;
@@ -82,20 +82,20 @@ public class CharacterView extends org.mingy.jmud.ui.CharacterView {
 			label.setText("/");
 		}
 		{
-			maxHp = new Label(parent, SWT.NONE);
-			maxHp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false,
-					false, 1, 1));
-			maxHp.setText("100");
+			effectiveHp = new Label(parent, SWT.NONE);
+			effectiveHp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER,
+					false, false, 1, 1));
+			effectiveHp.setText("100");
 		}
 		{
 			Label label = new Label(parent, SWT.NONE);
 			label.setText("[");
 		}
 		{
-			maxHpPercent = new Label(parent, SWT.NONE);
-			maxHpPercent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER,
-					false, false, 1, 1));
-			maxHpPercent.setText("100%");
+			effectiveHpPercent = new Label(parent, SWT.NONE);
+			effectiveHpPercent.setLayoutData(new GridData(SWT.RIGHT,
+					SWT.CENTER, false, false, 1, 1));
+			effectiveHpPercent.setText("100%");
 		}
 		{
 			Label label = new Label(parent, SWT.NONE);
@@ -130,20 +130,20 @@ public class CharacterView extends org.mingy.jmud.ui.CharacterView {
 			label.setText("/");
 		}
 		{
-			maxSp = new Label(parent, SWT.NONE);
-			maxSp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false,
-					false, 1, 1));
-			maxSp.setText("100");
+			effectiveSp = new Label(parent, SWT.NONE);
+			effectiveSp.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER,
+					false, false, 1, 1));
+			effectiveSp.setText("100");
 		}
 		{
 			Label label = new Label(parent, SWT.NONE);
 			label.setText("[");
 		}
 		{
-			maxSpPercent = new Label(parent, SWT.NONE);
-			maxSpPercent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER,
-					false, false, 1, 1));
-			maxSpPercent.setText("100%");
+			effectiveSpPercent = new Label(parent, SWT.NONE);
+			effectiveSpPercent.setLayoutData(new GridData(SWT.RIGHT,
+					SWT.CENTER, false, false, 1, 1));
+			effectiveSpPercent.setText("100%");
 		}
 		{
 			Label label = new Label(parent, SWT.NONE);
@@ -353,16 +353,16 @@ public class CharacterView extends org.mingy.jmud.ui.CharacterView {
 					@Override
 					public void run() {
 						currentSp.setText(args[1]);
-						maxSp.setText(args[2]);
-						maxSpPercent.setText(args[3] + "%");
-						int maxsp = Integer.parseInt(args[2]);
-						int spp = maxsp > 0 ? Integer.parseInt(args[1]) * 100
-								/ maxsp : 0;
+						effectiveSp.setText(args[2]);
+						effectiveSpPercent.setText(args[3] + "%");
+						int effsp = Integer.parseInt(args[2]);
+						int spp = effsp > 0 ? Integer.parseInt(args[1]) * 100
+								/ effsp : 0;
 						currentSpPercent.setText(spp + "%");
 						currentEnergy.setText(args[4]);
 						maxEnergy.setText(args[5]);
 						energy.setText(args[6] + "+");
-						int maxeng = Integer.parseInt(args[2]);
+						int maxeng = Integer.parseInt(args[5]);
 						int engp = maxeng > 0 ? Integer.parseInt(args[4]) * 100
 								/ maxeng : 0;
 						currentEnergyPercent.setText(engp + "%");
@@ -379,16 +379,16 @@ public class CharacterView extends org.mingy.jmud.ui.CharacterView {
 					@Override
 					public void run() {
 						currentHp.setText(args[1]);
-						maxHp.setText(args[2]);
-						maxHpPercent.setText(args[3] + "%");
-						int maxhp = Integer.parseInt(args[2]);
-						int hpp = maxhp > 0 ? Integer.parseInt(args[1]) * 100
-								/ maxhp : 0;
+						effectiveHp.setText(args[2]);
+						effectiveHpPercent.setText(args[3] + "%");
+						int effhp = Integer.parseInt(args[2]);
+						int hpp = effhp > 0 ? Integer.parseInt(args[1]) * 100
+								/ effhp : 0;
 						currentHpPercent.setText(hpp + "%");
 						currentForce.setText(args[4]);
 						maxForce.setText(args[5]);
 						enforce.setText(args[6] + "+");
-						int maxforce = Integer.parseInt(args[2]);
+						int maxforce = Integer.parseInt(args[5]);
 						int forcep = maxforce > 0 ? Integer.parseInt(args[4])
 								* 100 / maxforce : 0;
 						currentForcePercent.setText(forcep + "%");
@@ -423,6 +423,55 @@ public class CharacterView extends org.mingy.jmud.ui.CharacterView {
 						maxWater.setText(args[2]);
 						exp.setText(args[4]);
 						long e = Integer.parseInt(args[4]);
+						long lvl = (long) Math.pow(e * 10, 1.0 / 3) + 1;
+						maxLevel.setText(String.valueOf(lvl));
+						long n = (long) Math.ceil((lvl + 1) * (lvl + 1)
+								* (lvl + 1) / 10.0);
+						nextLevelExp.setText(String.valueOf(n));
+						composite.layout();
+					}
+				});
+			}
+		});
+		scope.addTrigger(null, new String[] { Configuration.HPBRIEF_PATTERN1,
+				Configuration.HPBRIEF_PATTERN2 }, new IExecution() {
+			@Override
+			public void execute(final IScope scope, final String[] args)
+					throws InterruptedException {
+				getSite().getShell().getDisplay().syncExec(new Runnable() {
+					@Override
+					public void run() {
+						currentHp.setText(args[9]);
+						effectiveHp.setText(args[8]);
+						int effhp = Integer.parseInt(args[8]);
+						effectiveHpPercent.setText((effhp * 100 / Integer
+								.parseInt(args[7])) + "%");
+						int hpp = effhp > 0 ? Integer.parseInt(args[9]) * 100
+								/ effhp : 0;
+						currentHpPercent.setText(hpp + "%");
+						currentSp.setText(args[12]);
+						effectiveSp.setText(args[11]);
+						int effsp = Integer.parseInt(args[11]);
+						effectiveSpPercent.setText((effsp * 100 / Integer
+								.parseInt(args[10])) + "%");
+						int spp = effsp > 0 ? Integer.parseInt(args[12]) * 100
+								/ effsp : 0;
+						currentSpPercent.setText(spp + "%");
+						currentForce.setText(args[4]);
+						maxForce.setText(args[3]);
+						int maxforce = Integer.parseInt(args[3]);
+						int forcep = maxforce > 0 ? Integer.parseInt(args[4])
+								* 100 / maxforce : 0;
+						currentForcePercent.setText(forcep + "%");
+						currentEnergy.setText(args[6]);
+						maxEnergy.setText(args[5]);
+						int maxeng = Integer.parseInt(args[5]);
+						int engp = maxeng > 0 ? Integer.parseInt(args[6]) * 100
+								/ maxeng : 0;
+						currentEnergyPercent.setText(engp + "%");
+						pots.setText(args[2]);
+						exp.setText(args[1]);
+						long e = Integer.parseInt(args[1]);
 						long lvl = (long) Math.pow(e * 10, 1.0 / 3) + 1;
 						maxLevel.setText(String.valueOf(lvl));
 						long n = (long) Math.ceil((lvl + 1) * (lvl + 1)

@@ -19,6 +19,8 @@ public class Configuration extends org.mingy.jmud.model.Configuration {
 	public static final String HP_PATTERN3 = "^【 食物 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(.+)\\s*\\]\\s*【 潜能 】\\s*(\\d+)\\s*$";
 	public static final String HP_PATTERN4 = "^【 饮水 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(.+)\\s*\\]\\s*【 经验 】\\s*(\\d+)\\s*$";
 	public static final String HP_PATTERN5 = "^【 状态 】\\s*(.+)\\s*$";
+	public static final String HPBRIEF_PATTERN1 = "^(?:> |)#(\\d+),(\\d+),(\\d+),(\\d+),(\\d+),(\\d+)$";
+	public static final String HPBRIEF_PATTERN2 = "^#(\\d+),(\\d+),(\\d+),(\\d+),(\\d+),(\\d+)$";
 
 	@Override
 	public String getName() {
@@ -48,7 +50,8 @@ public class Configuration extends org.mingy.jmud.model.Configuration {
 		loginModule.addTrigger(null,
 				"^有人从别处\\(\\s*(\\d+\\.\\d+\\.\\d+\\.\\d+)\\s*\\)连线取代你所控制的人物。$",
 				"#set " + Constants.VAR_IP_RECORD + " '%1'");
-		loginModule.addWatcher(Constants.VAR_LOGIN_OK, "#if {%2 > 0} {hp}");
+		loginModule
+				.addWatcher(Constants.VAR_LOGIN_OK, "#if {%2 > 0} {hpbrief}");
 	}
 
 	@Override
