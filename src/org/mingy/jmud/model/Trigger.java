@@ -21,7 +21,7 @@ public abstract class Trigger {
 	protected static final Log logger = LogFactory.getLog(Trigger.class);
 
 	/** 执行逻辑 */
-	private IExecution execution;
+	private Execution execution;
 
 	/**
 	 * 构造器。
@@ -29,7 +29,7 @@ public abstract class Trigger {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public Trigger(IExecution execution) {
+	public Trigger(Execution execution) {
 		this.execution = execution;
 	}
 
@@ -68,13 +68,13 @@ public abstract class Trigger {
 		String regex = pattern.pattern();
 		if (regex.charAt(0) == '^' && start > 0)
 			return null;
-		if (regex.charAt(regex.length() - 1) == '$'
-				&& !line.getText().endsWith("\n"))
+		boolean f = regex.charAt(regex.length() - 1) == '$';
+		if (f && !line.getText().endsWith("\n"))
 			return null;
 		Matcher m = pattern.matcher(line.getText().substring(start));
 		if (m.find()) {
 			List<String> result = new ArrayList<String>();
-			result.add(m.group());
+			result.add(f ? (m.group() + "\n") : m.group());
 			for (int i = 1; i <= m.groupCount(); i++)
 				result.add(m.group(i));
 			return result;
@@ -87,7 +87,7 @@ public abstract class Trigger {
 	 * 
 	 * @return 执行逻辑
 	 */
-	public IExecution getExecution() {
+	public Execution getExecution() {
 		return execution;
 	}
 
@@ -97,7 +97,7 @@ public abstract class Trigger {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public void setExecution(IExecution execution) {
+	public void setExecution(Execution execution) {
 		this.execution = execution;
 	}
 }

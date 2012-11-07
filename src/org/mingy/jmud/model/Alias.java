@@ -12,7 +12,7 @@ public class Alias {
 	private String name;
 
 	/** 执行逻辑 */
-	private IExecution execution;
+	private Execution execution;
 
 	/**
 	 * 构造器。
@@ -22,7 +22,7 @@ public class Alias {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	Alias(String name, IExecution execution) {
+	Alias(String name, Execution execution) {
 		this.name = name;
 		this.execution = execution;
 	}
@@ -41,7 +41,7 @@ public class Alias {
 	 * 
 	 * @return 执行逻辑
 	 */
-	public IExecution getExecution() {
+	public Execution getExecution() {
 		return execution;
 	}
 
@@ -51,7 +51,7 @@ public class Alias {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public void setExecution(IExecution execution) {
+	public void setExecution(Execution execution) {
 		this.execution = execution;
 	}
 

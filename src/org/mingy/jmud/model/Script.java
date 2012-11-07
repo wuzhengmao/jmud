@@ -12,7 +12,7 @@ import org.mingy.jmud.client.SGR;
  * @author Mingy
  * @since 1.0.0
  */
-public class Script implements IExecution {
+public class Script extends Execution {
 
 	/** 日志 */
 	private static final Log logger = LogFactory.getLog(Script.class);

@@ -49,7 +49,7 @@ public class Timers {
 	 *            执行逻辑
 	 * @return 新增或修改后的定时器
 	 */
-	public Timer set(String name, IExecution execution) {
+	public Timer set(String name, Execution execution) {
 		Timer timer = ALL.get(name);
 		if (timer != null) {
 			timer.setExecution(execution);
@@ -72,7 +72,7 @@ public class Timers {
 	public Timer set(String name, String script) {
 		Timer timer = ALL.get(name);
 		if (timer != null) {
-			IExecution execution = timer.getExecution();
+			Execution execution = timer.getExecution();
 			if (execution instanceof Script) {
 				((Script) execution).setContent(script);
 			} else {
@@ -156,7 +156,7 @@ public class Timers {
 
 		@Override
 		public void run() {
-			IExecution execution = timer.getExecution();
+			Execution execution = timer.getExecution();
 			if (execution != null)
 				scope.execute(execution, null);
 		}

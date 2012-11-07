@@ -140,7 +140,7 @@ public class ScopeBindings extends SimpleBindings {
 	 *            执行逻辑
 	 * @return 监听器
 	 */
-	public Watcher addWatcher(String key, IExecution execution) {
+	public Watcher addWatcher(String key, Execution execution) {
 		Watcher watcher = new Watcher(execution);
 		addWatcher(key, watcher);
 		return watcher;
@@ -157,7 +157,7 @@ public class ScopeBindings extends SimpleBindings {
 	 *            执行逻辑
 	 * @return 监听器
 	 */
-	public Watcher addWatcher(String key, String id, IExecution execution) {
+	public Watcher addWatcher(String key, String id, Execution execution) {
 		Watcher watcher = new Watcher(id, execution);
 		addWatcher(key, watcher);
 		return watcher;

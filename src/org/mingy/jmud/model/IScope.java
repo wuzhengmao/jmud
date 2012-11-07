@@ -118,12 +118,22 @@ public interface IScope {
 	void echoText(String text, String style);
 
 	/**
+	 * 隐藏最接近尾部的一段指定文本。
+	 * 
+	 * @param text
+	 *            文本
+	 */
+	void hideText(String text);
+
+	/**
 	 * 发送一条指令到服务器。
 	 * 
 	 * @param command
 	 *            指令
+	 * @param echo
+	 *            true时指令会回显
 	 */
-	void sendCommand(String command);
+	void sendCommand(String command, boolean echo);
 
 	/**
 	 * 在工作线程中执行。
@@ -144,17 +154,17 @@ public interface IScope {
 	void scheduleRun(TimerTask task, long period);
 
 	/**
-	 * 在工作线程中执行一段逻辑。
+	 * 执行一段逻辑。
 	 * 
 	 * @param execution
 	 *            执行逻辑
 	 * @param args
 	 *            参数
 	 */
-	void execute(IExecution execution, String[] args);
+	void execute(Execution execution, String[] args);
 
 	/**
-	 * 在工作线程中执行脚本。
+	 * 在工作线程汇总执行脚本。
 	 * 
 	 * @param script
 	 *            脚本
@@ -225,7 +235,7 @@ public interface IScope {
 	 *            执行逻辑
 	 * @return 生成的监听器
 	 */
-	Watcher addWatcher(String name, IExecution execution);
+	Watcher addWatcher(String name, Execution execution);
 
 	/**
 	 * 监听变量的变化，执行指定的逻辑。
@@ -238,7 +248,7 @@ public interface IScope {
 	 *            执行逻辑
 	 * @return 生成的监听器
 	 */
-	Watcher addWatcher(String name, String id, IExecution execution);
+	Watcher addWatcher(String name, String id, Execution execution);
 
 	/**
 	 * 监听变量的变化，执行指定的脚本。
@@ -322,7 +332,7 @@ public interface IScope {
 	 *            执行逻辑
 	 * @return 新增或修改后的别名
 	 */
-	Alias setAlias(String name, IExecution execution);
+	Alias setAlias(String name, Execution execution);
 
 	/**
 	 * 设置一个别名。
@@ -384,7 +394,7 @@ public interface IScope {
 	 *            执行逻辑
 	 * @return 新增的触发器
 	 */
-	Trigger addTrigger(String group, String regex, IExecution execution);
+	Trigger addTrigger(String group, String regex, Execution execution);
 
 	/**
 	 * 添加一个简单的触发器。
@@ -410,7 +420,7 @@ public interface IScope {
 	 *            执行逻辑
 	 * @return 新增的触发器
 	 */
-	Trigger addTrigger(String group, String[] regexes, IExecution execution);
+	Trigger addTrigger(String group, String[] regexes, Execution execution);
 
 	/**
 	 * 添加一个简单的触发器。
@@ -474,7 +484,7 @@ public interface IScope {
 	 *            执行逻辑
 	 * @return 新增或修改后的定时器
 	 */
-	Timer setTimer(String name, IExecution execution);
+	Timer setTimer(String name, Execution execution);
 
 	/**
 	 * 设置一个定时器。

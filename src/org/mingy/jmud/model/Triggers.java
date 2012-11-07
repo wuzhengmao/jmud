@@ -86,7 +86,7 @@ public class Triggers {
 	 *            执行逻辑
 	 * @return 新增的触发器
 	 */
-	public Trigger add(String group, String regex, IExecution execution) {
+	public Trigger add(String group, String regex, Execution execution) {
 		if (group == null)
 			group = "";
 		Trigger trigger = new SimpleTrigger(regex, execution);
@@ -120,7 +120,7 @@ public class Triggers {
 	 *            执行逻辑
 	 * @return 新增的触发器
 	 */
-	public Trigger add(String group, String[] regexes, IExecution execution) {
+	public Trigger add(String group, String[] regexes, Execution execution) {
 		if (group == null)
 			group = "";
 		Trigger trigger = new SimpleTrigger(regexes, execution);
@@ -230,7 +230,7 @@ public class Triggers {
 							: 0);
 					if (args != null) {
 						l.ptrs.put(id, l.text.length());
-						IExecution execution = trigger.getExecution();
+						Execution execution = trigger.getExecution();
 						if (execution != null)
 							scope.execute(execution, args);
 					}

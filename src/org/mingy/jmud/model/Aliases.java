@@ -58,7 +58,7 @@ public class Aliases {
 	 *            执行逻辑
 	 * @return 新增或修改后的别名
 	 */
-	public Alias set(String name, IExecution execution) {
+	public Alias set(String name, Execution execution) {
 		Alias alias = ALL.get(name);
 		if (alias != null) {
 			alias.setExecution(execution);
@@ -81,7 +81,7 @@ public class Aliases {
 	public Alias set(String name, String script) {
 		Alias alias = ALL.get(name);
 		if (alias != null) {
-			IExecution execution = alias.getExecution();
+			Execution execution = alias.getExecution();
 			if (execution instanceof Script) {
 				((Script) execution).setContent(script);
 			} else {
@@ -104,7 +104,7 @@ public class Aliases {
 	public String getScript(String name) {
 		Alias alias = get(name);
 		if (alias != null) {
-			IExecution execution = alias.getExecution();
+			Execution execution = alias.getExecution();
 			if (execution instanceof Script)
 				return ((Script) execution).getContent();
 		}

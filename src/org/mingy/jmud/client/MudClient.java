@@ -468,7 +468,8 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 	private void appendLine(byte[] bytes, int start, int length,
 			boolean continues) {
 		if (!echoForbidden) {
-			String line = new String(bytes, start, length, charset);
+			String line = new String(bytes, start, length, charset).replace(
+					"\r\n", "\n");
 			show(line, null, continues);
 		}
 	}
@@ -528,6 +529,19 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 		}
 	}
 
+	@Override
+	public void hide(final String text) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				int i = styledText.getText().lastIndexOf(text);
+				if (i >= 0) {
+					styledText.replaceTextRange(i, text.length(), "");
+				}
+			}
+		});
+	}
+
 	private static int matchEscStart(byte[] bytes, int start) {
 		for (int i = start; i < bytes.length - 1; i++) {
 			if (bytes[i] == 27 && bytes[i + 1] == 91)
@@ -575,7 +589,7 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 						logger.trace("short key command: "
 								+ shortKey.getCommand());
 					}
-					send(shortKey.getCommand());
+					send(shortKey.getCommand(), true);
 					event.doit = false;
 				}
 				break;
@@ -597,9 +611,10 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 	}
 
 	@Override
-	public void send(String command) {
+	public void send(String command, boolean echo) {
 		command += "\n";
-		echo(command, SGR.ECHO);
+		if (echo)
+			echo(command, SGR.ECHO);
 		if (isConnected()) {
 			client.write(command.getBytes(charset));
 		}

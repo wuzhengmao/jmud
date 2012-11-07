@@ -14,7 +14,7 @@ public class Timer {
 	private String name;
 
 	/** 执行逻辑 */
-	private IExecution execution;
+	private Execution execution;
 
 	/** 时间间隔（毫秒） */
 	private int tick;
@@ -33,7 +33,7 @@ public class Timer {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	Timer(String name, IExecution execution) {
+	Timer(String name, Execution execution) {
 		this.name = name;
 		this.execution = execution;
 	}
@@ -52,7 +52,7 @@ public class Timer {
 	 * 
 	 * @return 执行逻辑
 	 */
-	public IExecution getExecution() {
+	public Execution getExecution() {
 		return execution;
 	}
 
@@ -62,7 +62,7 @@ public class Timer {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public void setExecution(IExecution execution) {
+	public void setExecution(Execution execution) {
 		this.execution = execution;
 	}
 

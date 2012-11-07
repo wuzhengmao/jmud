@@ -14,11 +14,13 @@ import org.mingy.jmud.ui.pkuxkx.CharacterView;
  */
 public class Configuration extends org.mingy.jmud.model.Configuration {
 
+	public static final String HP_PATTERN_S = "^(?:> |)≡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━≡$";
 	public static final String HP_PATTERN1 = "^【 精神 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(\\d+)%\\s*\\]\\s*【 精力 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\(\\+\\s*(\\d+)\\s*\\)$";
 	public static final String HP_PATTERN2 = "^【 气血 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(\\d+)%\\s*\\]\\s*【 内力 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\(\\+\\s*(\\d+)\\s*\\)$";
 	public static final String HP_PATTERN3 = "^【 食物 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(.+)\\s*\\]\\s*【 潜能 】\\s*(\\d+)\\s*$";
 	public static final String HP_PATTERN4 = "^【 饮水 】\\s*(\\d+)\\s*/\\s*(\\d+)\\s*\\[\\s*(.+)\\s*\\]\\s*【 经验 】\\s*(\\d+)\\s*$";
 	public static final String HP_PATTERN5 = "^【 状态 】\\s*(.+)\\s*$";
+	public static final String HP_PATTERN_E = "^≡━━━━━━━━━━━━━━━━━━━━━━━◎北大侠客行◎━━≡$";
 	public static final String HPBRIEF_PATTERN1 = "^(?:> |)#(\\d+),(\\d+),(\\d+),(\\d+),(\\d+),(\\d+)$";
 	public static final String HPBRIEF_PATTERN2 = "^#(\\d+),(\\d+),(\\d+),(\\d+),(\\d+),(\\d+)$";
 

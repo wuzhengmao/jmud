@@ -25,7 +25,7 @@ public class SimpleTrigger extends Trigger {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public SimpleTrigger(String regex, IExecution execution) {
+	public SimpleTrigger(String regex, Execution execution) {
 		super(execution);
 		patterns = new Pattern[] { Pattern.compile(regex) };
 	}
@@ -38,7 +38,7 @@ public class SimpleTrigger extends Trigger {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public SimpleTrigger(String[] regexes, IExecution execution) {
+	public SimpleTrigger(String[] regexes, Execution execution) {
 		super(execution);
 		patterns = new Pattern[regexes.length];
 		for (int i = 0; i < regexes.length; i++)
@@ -60,7 +60,7 @@ public class SimpleTrigger extends Trigger {
 			List<String> r = match(line, 0, patterns[i]);
 			if (r == null)
 				return null;
-			result.set(0, result.get(0) + "\n" + r.get(0));
+			result.set(0, result.get(0) + r.get(0));
 			for (int j = 1; j < r.size(); j++)
 				result.add(r.get(j));
 		}

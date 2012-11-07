@@ -76,12 +76,22 @@ public interface IMudClient {
 	void echo(String text, String style);
 
 	/**
+	 * 隐藏最接近尾部的一段指定文本。
+	 * 
+	 * @param text
+	 *            文本
+	 */
+	void hide(String text);
+
+	/**
 	 * 发送一条指令到服务器。
 	 * 
 	 * @param command
 	 *            指令
+	 * @param echo
+	 *            true时指令会回显
 	 */
-	void send(String command);
+	void send(String command, boolean echo);
 
 	/**
 	 * 在UI线程中执行。

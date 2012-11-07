@@ -17,13 +17,13 @@ public class DefaultCommand extends Command {
 			String[] args) throws Exception {
 		Alias alias = scope.getAlias(items[0]);
 		if (alias != null) {
-			IExecution execution = alias.getExecution();
+			Execution execution = alias.getExecution();
 			if (execution != null)
 				execution.execute(scope, items);
 			return true;
 		}
 		header = Commands.replaceArgs(header, args);
-		scope.sendCommand(Commands.replaceCommand(scope, header));
+		scope.sendCommand(Commands.replaceCommand(scope, header), true);
 		return true;
 	}
 }

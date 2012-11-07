@@ -14,7 +14,7 @@ public class Watcher {
 	private String id;
 
 	/** 执行逻辑 */
-	private IExecution execution;
+	private Execution execution;
 
 	/**
 	 * 构造器。
@@ -22,7 +22,7 @@ public class Watcher {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public Watcher(IExecution execution) {
+	public Watcher(Execution execution) {
 		this.id = "__watcher_" + (++SEQ);
 		this.execution = execution;
 	}
@@ -35,7 +35,7 @@ public class Watcher {
 	 * @param execution
 	 *            执行逻辑
 	 */
-	public Watcher(String id, IExecution execution) {
+	public Watcher(String id, Execution execution) {
 		this.id = id;
 		this.execution = execution;
 	}
@@ -54,7 +54,7 @@ public class Watcher {
 	 * 
 	 * @return 执行逻辑
 	 */
-	public IExecution getExecution() {
+	public Execution getExecution() {
 		return execution;
 	}
 

@@ -7,8 +7,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IWorkbenchPart;
+import org.mingy.jmud.model.Capture;
 import org.mingy.jmud.model.Context;
-import org.mingy.jmud.model.IExecution;
+import org.mingy.jmud.model.Execution;
 import org.mingy.jmud.model.IScope;
 import org.mingy.jmud.model.Scope;
 import org.mingy.jmud.model.pkuxkx.Configuration;
@@ -345,141 +346,88 @@ public class CharacterView extends org.mingy.jmud.ui.CharacterView {
 				context.removeChild(MODULE);
 			}
 		});
-		scope.addTrigger(null, Configuration.HP_PATTERN1, new IExecution() {
-			@Override
-			public void execute(final IScope scope, final String[] args)
-					throws InterruptedException {
-				getSite().getShell().getDisplay().syncExec(new Runnable() {
+		scope.addTrigger(null, new String[] { Configuration.HP_PATTERN_S,
+				Configuration.HP_PATTERN1, Configuration.HP_PATTERN2,
+				Configuration.HP_PATTERN3, Configuration.HP_PATTERN4,
+				Configuration.HP_PATTERN5, Configuration.HP_PATTERN_E },
+				new Execution() {
 					@Override
-					public void run() {
-						currentSp.setText(args[1]);
-						effectiveSp.setText(args[2]);
-						effectiveSpPercent.setText(args[3] + "%");
-						int effsp = Integer.parseInt(args[2]);
-						int spp = effsp > 0 ? Integer.parseInt(args[1]) * 100
-								/ effsp : 0;
-						currentSpPercent.setText(spp + "%");
-						currentEnergy.setText(args[4]);
-						maxEnergy.setText(args[5]);
-						energy.setText(args[6] + "+");
-						int maxeng = Integer.parseInt(args[5]);
-						int engp = maxeng > 0 ? Integer.parseInt(args[4]) * 100
-								/ maxeng : 0;
-						currentEnergyPercent.setText(engp + "%");
-						composite.layout();
+					public void execute(final IScope scope, final String[] args)
+							throws InterruptedException {
+						update(args);
 					}
 				});
-			}
-		});
-		scope.addTrigger(null, Configuration.HP_PATTERN2, new IExecution() {
-			@Override
-			public void execute(final IScope scope, final String[] args)
-					throws InterruptedException {
-				getSite().getShell().getDisplay().syncExec(new Runnable() {
-					@Override
-					public void run() {
-						currentHp.setText(args[1]);
-						effectiveHp.setText(args[2]);
-						effectiveHpPercent.setText(args[3] + "%");
-						int effhp = Integer.parseInt(args[2]);
-						int hpp = effhp > 0 ? Integer.parseInt(args[1]) * 100
-								/ effhp : 0;
-						currentHpPercent.setText(hpp + "%");
-						currentForce.setText(args[4]);
-						maxForce.setText(args[5]);
-						enforce.setText(args[6] + "+");
-						int maxforce = Integer.parseInt(args[5]);
-						int forcep = maxforce > 0 ? Integer.parseInt(args[4])
-								* 100 / maxforce : 0;
-						currentForcePercent.setText(forcep + "%");
-						composite.layout();
-					}
-				});
-			}
-		});
-		scope.addTrigger(null, Configuration.HP_PATTERN3, new IExecution() {
-			@Override
-			public void execute(final IScope scope, final String[] args)
-					throws InterruptedException {
-				getSite().getShell().getDisplay().syncExec(new Runnable() {
-					@Override
-					public void run() {
-						currentFood.setText(args[1]);
-						maxFood.setText(args[2]);
-						pots.setText(args[4]);
-						composite.layout();
-					}
-				});
-			}
-		});
-		scope.addTrigger(null, Configuration.HP_PATTERN4, new IExecution() {
-			@Override
-			public void execute(final IScope scope, final String[] args)
-					throws InterruptedException {
-				getSite().getShell().getDisplay().syncExec(new Runnable() {
-					@Override
-					public void run() {
-						currentWater.setText(args[1]);
-						maxWater.setText(args[2]);
-						exp.setText(args[4]);
-						long e = Integer.parseInt(args[4]);
-						long lvl = (long) Math.pow(e * 10, 1.0 / 3) + 1;
-						maxLevel.setText(String.valueOf(lvl));
-						long n = (long) Math.ceil((lvl + 1) * (lvl + 1)
-								* (lvl + 1) / 10.0);
-						nextLevelExp.setText(String.valueOf(n));
-						composite.layout();
-					}
-				});
-			}
-		});
 		scope.addTrigger(null, new String[] { Configuration.HPBRIEF_PATTERN1,
-				Configuration.HPBRIEF_PATTERN2 }, new IExecution() {
+				Configuration.HPBRIEF_PATTERN2 }, new Capture());
+		scope.addTrigger(null, new String[] { Configuration.HPBRIEF_PATTERN1,
+				Configuration.HPBRIEF_PATTERN2 }, new Execution() {
 			@Override
-			public void execute(final IScope scope, final String[] args)
+			public void execute(IScope scope, String[] args)
 					throws InterruptedException {
-				getSite().getShell().getDisplay().syncExec(new Runnable() {
-					@Override
-					public void run() {
-						currentHp.setText(args[9]);
-						effectiveHp.setText(args[8]);
-						int effhp = Integer.parseInt(args[8]);
-						effectiveHpPercent.setText((effhp * 100 / Integer
-								.parseInt(args[7])) + "%");
-						int hpp = effhp > 0 ? Integer.parseInt(args[9]) * 100
-								/ effhp : 0;
-						currentHpPercent.setText(hpp + "%");
-						currentSp.setText(args[12]);
-						effectiveSp.setText(args[11]);
-						int effsp = Integer.parseInt(args[11]);
-						effectiveSpPercent.setText((effsp * 100 / Integer
-								.parseInt(args[10])) + "%");
-						int spp = effsp > 0 ? Integer.parseInt(args[12]) * 100
-								/ effsp : 0;
-						currentSpPercent.setText(spp + "%");
-						currentForce.setText(args[4]);
-						maxForce.setText(args[3]);
-						int maxforce = Integer.parseInt(args[3]);
-						int forcep = maxforce > 0 ? Integer.parseInt(args[4])
-								* 100 / maxforce : 0;
-						currentForcePercent.setText(forcep + "%");
-						currentEnergy.setText(args[6]);
-						maxEnergy.setText(args[5]);
-						int maxeng = Integer.parseInt(args[5]);
-						int engp = maxeng > 0 ? Integer.parseInt(args[6]) * 100
-								/ maxeng : 0;
-						currentEnergyPercent.setText(engp + "%");
-						pots.setText(args[2]);
-						exp.setText(args[1]);
-						long e = Integer.parseInt(args[1]);
-						long lvl = (long) Math.pow(e * 10, 1.0 / 3) + 1;
-						maxLevel.setText(String.valueOf(lvl));
-						long n = (long) Math.ceil((lvl + 1) * (lvl + 1)
-								* (lvl + 1) / 10.0);
-						nextLevelExp.setText(String.valueOf(n));
-						composite.layout();
-					}
-				});
+				int effhp = Integer.parseInt(args[8]);
+				int hpp = effhp * 100 / Integer.parseInt(args[7]);
+				int effsp = Integer.parseInt(args[11]);
+				int spp = effsp * 100 / Integer.parseInt(args[10]);
+				update(new String[] { args[0], args[12], args[11],
+						String.valueOf(spp), args[6], args[5], null, args[9],
+						args[8], String.valueOf(hpp), args[4], args[3], null,
+						null, null, null, args[2], null, null, null, args[1],
+						null });
+			}
+		});
+	}
+
+	private void update(final String[] args) {
+		getSite().getShell().getDisplay().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				currentSp.setText(args[1]);
+				effectiveSp.setText(args[2]);
+				effectiveSpPercent.setText(args[3] + "%");
+				int effsp = Integer.parseInt(args[2]);
+				int spp = effsp > 0 ? Integer.parseInt(args[1]) * 100 / effsp
+						: 0;
+				currentSpPercent.setText(spp + "%");
+				currentEnergy.setText(args[4]);
+				maxEnergy.setText(args[5]);
+				if (args[6] != null)
+					energy.setText(args[6] + "+");
+				int maxeng = Integer.parseInt(args[5]);
+				int engp = maxeng > 0 ? Integer.parseInt(args[4]) * 100
+						/ maxeng : 0;
+				currentEnergyPercent.setText(engp + "%");
+				currentHp.setText(args[7]);
+				effectiveHp.setText(args[8]);
+				effectiveHpPercent.setText(args[9] + "%");
+				int effhp = Integer.parseInt(args[8]);
+				int hpp = effhp > 0 ? Integer.parseInt(args[7]) * 100 / effhp
+						: 0;
+				currentHpPercent.setText(hpp + "%");
+				currentForce.setText(args[10]);
+				maxForce.setText(args[11]);
+				if (args[12] != null)
+					enforce.setText(args[12] + "+");
+				int maxforce = Integer.parseInt(args[11]);
+				int forcep = maxforce > 0 ? Integer.parseInt(args[10]) * 100
+						/ maxforce : 0;
+				currentForcePercent.setText(forcep + "%");
+				if (args[13] != null)
+					currentFood.setText(args[13]);
+				if (args[14] != null)
+					maxFood.setText(args[14]);
+				pots.setText(args[16]);
+				if (args[17] != null)
+					currentWater.setText(args[17]);
+				if (args[18] != null)
+					maxWater.setText(args[18]);
+				exp.setText(args[20]);
+				long e = Integer.parseInt(args[20]);
+				long lvl = (long) Math.pow(e * 10, 1.0 / 3) + 1;
+				maxLevel.setText(String.valueOf(lvl));
+				long n = (long) Math.ceil((lvl + 1) * (lvl + 1) * (lvl + 1)
+						/ 10.0);
+				nextLevelExp.setText(String.valueOf(n));
+				composite.layout();
 			}
 		});
 	}

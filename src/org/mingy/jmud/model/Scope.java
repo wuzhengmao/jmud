@@ -178,8 +178,13 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public void sendCommand(String command) {
-		getClient().send(command);
+	public void hideText(String text) {
+		getClient().hide(text);
+	}
+
+	@Override
+	public void sendCommand(String command, boolean echo) {
+		getClient().send(command, echo);
 	}
 
 	@Override
@@ -193,23 +198,31 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public void execute(final IExecution execution, final String[] args) {
-		runOnWorkThread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					execution.execute(Scope.this, args);
-				} catch (InterruptExecutionException e) {
-					// ignore
-				} catch (InterruptedException e) {
-					// ignore
-				} catch (RuntimeException e) {
-					if (logger.isErrorEnabled()) {
-						logger.error("error on execute", e);
-					}
+	public void execute(final Execution execution, final String[] args) {
+		if (execution.shallForkThread()) {
+			runOnWorkThread(new Runnable() {
+				@Override
+				public void run() {
+					doExecute(execution, args);
 				}
+			});
+		} else {
+			doExecute(execution, args);
+		}
+	}
+
+	private void doExecute(Execution execution, String[] args) {
+		try {
+			execution.execute(this, args);
+		} catch (InterruptExecutionException e) {
+			// ignore
+		} catch (InterruptedException e) {
+			// ignore
+		} catch (RuntimeException e) {
+			if (logger.isErrorEnabled()) {
+				logger.error("error on execute", e);
 			}
-		});
+		}
 	}
 
 	@Override
@@ -262,7 +275,7 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public Watcher addWatcher(String name, IExecution execution) {
+	public Watcher addWatcher(String name, Execution execution) {
 		Watcher watcher = getVariables().addWatcher(name, execution);
 		if (logger.isDebugEnabled()) {
 			logger.debug("[" + getName() + "] WATCH[+]: " + name + ", "
@@ -272,7 +285,7 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public Watcher addWatcher(String name, String id, IExecution execution) {
+	public Watcher addWatcher(String name, String id, Execution execution) {
 		Watcher watcher = getVariables().addWatcher(name, id, execution);
 		if (logger.isDebugEnabled()) {
 			logger.debug("[" + getName() + "] WATCH[+]: " + name + ", "
@@ -339,7 +352,7 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public Alias setAlias(String name, IExecution execution) {
+	public Alias setAlias(String name, Execution execution) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("[" + getName() + "] ALIAS[+]: " + name + " = "
 					+ execution);
@@ -390,7 +403,7 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public Trigger addTrigger(String group, String regex, IExecution execution) {
+	public Trigger addTrigger(String group, String regex, Execution execution) {
 		Trigger trigger = getTriggers().add(group, regex, execution);
 		if (trigger != null) {
 			if (logger.isDebugEnabled()) {
@@ -421,7 +434,7 @@ public abstract class Scope implements IScope {
 
 	@Override
 	public Trigger addTrigger(String group, String[] regexes,
-			IExecution execution) {
+			Execution execution) {
 		Trigger trigger = getTriggers().add(group, regexes, execution);
 		if (trigger != null) {
 			if (logger.isDebugEnabled()) {
@@ -524,7 +537,7 @@ public abstract class Scope implements IScope {
 	}
 
 	@Override
-	public Timer setTimer(String name, IExecution execution) {
+	public Timer setTimer(String name, Execution execution) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("[" + getName() + "] TIMER[+]: " + name + " = "
 					+ execution);
