@@ -2,9 +2,12 @@ package org.mingy.jmud.client;
 
 import java.awt.Toolkit;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -92,6 +95,8 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 	private ConnectionStates state;
 	/** 注册连接监听器 */
 	private Set<IConnectionStateListener> listeners;
+	/** 回显内容在文档中的位置记录 */
+	private LinkedList<int[]> echoPositions;
 
 	/** 是否为MAC操作系统 */
 	private static final boolean IS_MAC;
@@ -122,6 +127,7 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 		commands = new LinkedList<String>();
 		state = ConnectionStates.DISCONNECTED;
 		listeners = new HashSet<IConnectionStateListener>(4);
+		echoPositions = new LinkedList<int[]>();
 		context.init(session);
 		init();
 		initSGR();
@@ -492,7 +498,13 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				doEcho(text, style);
+				if (text != null && text.length() > 0) {
+					doEcho(text, style);
+					int[] pos = new int[2];
+					pos[1] = styledText.getCharCount();
+					pos[0] = pos[1] - text.length();
+					echoPositions.addLast(pos);
+				}
 			}
 		});
 	}
@@ -514,9 +526,8 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 		styledText.append(text);
 		styledText.setStyleRange(sr);
 		int n = styledText.getLineCount() - CONTENT_MAX_LINES;
-		if (n > 0) {
-			styledText.replaceTextRange(0, styledText.getOffsetAtLine(n), "");
-		}
+		if (n > 0)
+			cutText(0, styledText.getOffsetAtLine(n));
 		if (logger.isTraceEnabled()) {
 			logger.trace("lines: " + content.getLineCount());
 		}
@@ -529,14 +540,104 @@ public class MudClient implements ITelnetClientListener, IMudClient {
 		}
 	}
 
+	private void cutText(int start, int end) {
+		int n = end - start;
+		styledText.replaceTextRange(start, n, "");
+		for (Iterator<int[]> it = echoPositions.descendingIterator(); it
+				.hasNext();) {
+			int[] pos = it.next();
+			if (pos[1] <= start)
+				break;
+			pos[1] -= n;
+			if (pos[0] >= end)
+				pos[0] -= n;
+			else if (pos[0] > start)
+				pos[0] = start;
+			if (pos[1] < 0) {
+				it.remove();
+			} else if (pos[0] < 0) {
+				pos[0] = 0;
+			}
+		}
+	}
+
 	@Override
 	public void hide(final String text) {
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				int i = styledText.getText().lastIndexOf(text);
-				if (i >= 0) {
-					styledText.replaceTextRange(i, text.length(), "");
+				int len = styledText.getCharCount();
+				int k = len - text.length();
+				for (Iterator<int[]> it = echoPositions.descendingIterator(); it
+						.hasNext();) {
+					int[] pos = it.next();
+					if (pos[1] > k) {
+						k -= pos[1] - pos[0];
+					} else {
+						break;
+					}
+				}
+				String str = styledText.getTextRange(k, len - k);
+				List<int[]> list = null;
+				for (Iterator<int[]> it = echoPositions.descendingIterator(); it
+						.hasNext();) {
+					int[] pos = it.next();
+					if (pos[0] < len && pos[1] > k) {
+						str = str.substring(0, pos[0] - k)
+								+ str.substring(pos[1] - k);
+						if (list == null)
+							list = new ArrayList<int[]>(4);
+						list.add(pos);
+					} else if (pos[1] <= k) {
+						break;
+					}
+				}
+				int j = str.lastIndexOf(text);
+				if (j >= 0) {
+					j += k;
+					if (list != null) {
+						List<int[]> ranges = new ArrayList<int[]>(4);
+						int m = j;
+						int n = text.length();
+						for (int i = list.size() - 1; i >= 0; i--) {
+							int[] pos = list.get(i);
+							if (m < pos[0]) {
+								if (j + n > pos[0]) {
+									ranges.add(new int[] { m, pos[0] });
+									m = pos[1];
+									n += pos[1] - pos[0];
+								} else {
+									break;
+								}
+							} else {
+								j += pos[1] - pos[0];
+								m += pos[1] - pos[0];
+							}
+						}
+						if (j + n > m)
+							ranges.add(new int[] { m, j + n });
+						if (logger.isDebugEnabled()) {
+							for (int[] pos : ranges) {
+								logger.debug("cut "
+										+ pos[0]
+										+ "-"
+										+ pos[1]
+										+ ": "
+										+ styledText.getTextRange(pos[0],
+												pos[1] - pos[0]));
+							}
+						}
+						for (int i = ranges.size() - 1; i >= 0; i--) {
+							int[] pos = ranges.get(i);
+							cutText(pos[0], pos[1]);
+						}
+					} else {
+						styledText.replaceTextRange(j, text.length(), "");
+					}
+				} else {
+					if (logger.isWarnEnabled()) {
+						logger.warn("text not match in:\n" + str);
+					}
 				}
 			}
 		});

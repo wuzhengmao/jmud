@@ -76,7 +76,7 @@ public interface IMudClient {
 	void echo(String text, String style);
 
 	/**
-	 * 隐藏最接近尾部的一段指定文本。
+	 * 从尾部开始隐藏一段文本。
 	 * 
 	 * @param text
 	 *            文本

@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mingy.jmud.model.Triggers.Line;
+import org.mingy.jmud.util.Strings;
 
 /**
  * 触发器的抽象类。
@@ -65,16 +66,20 @@ public abstract class Trigger {
 	 * @return 匹配成功的参数，未匹配成功时返回null
 	 */
 	protected static List<String> match(Line line, int start, Pattern pattern) {
+		String text = line.getText();
+		if (Strings.isEmpty(text))
+			return null;
 		String regex = pattern.pattern();
 		if (regex.charAt(0) == '^' && start > 0)
 			return null;
-		boolean f = regex.charAt(regex.length() - 1) == '$';
-		if (f && !line.getText().endsWith("\n"))
+		if (regex.charAt(regex.length() - 1) == '$'
+				&& text.charAt(text.length() - 1) != '\n')
 			return null;
-		Matcher m = pattern.matcher(line.getText().substring(start));
+		text = text.substring(start);
+		Matcher m = pattern.matcher(text);
 		if (m.find()) {
 			List<String> result = new ArrayList<String>();
-			result.add(f ? (m.group() + "\n") : m.group());
+			result.add(text);
 			for (int i = 1; i <= m.groupCount(); i++)
 				result.add(m.group(i));
 			return result;
