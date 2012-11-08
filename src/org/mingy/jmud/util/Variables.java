@@ -91,7 +91,7 @@ public abstract class Variables {
 			else if (val instanceof Integer)
 				return ((Integer) val).longValue();
 			else
-				return Long.parseLong(val.toString());
+				return Double.valueOf(val.toString()).longValue();
 		} catch (NumberFormatException e) {
 			return null;
 		}
@@ -117,7 +117,7 @@ public abstract class Variables {
 			else if (val instanceof Integer)
 				return (Integer) val;
 			else
-				return Integer.parseInt(val.toString());
+				return Double.valueOf(val.toString()).intValue();
 		} catch (NumberFormatException e) {
 			return null;
 		}

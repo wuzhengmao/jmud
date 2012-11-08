@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mingy.jmud.util.Strings;
 import org.mingy.jmud.util.Variables;
 
 /**
@@ -43,6 +44,7 @@ public abstract class Commands {
 		TYPES.put("#wait", WaitCommand.class);
 		TYPES.put("#return", ReturnCommand.class);
 		TYPES.put("#if", IfCommand.class);
+		TYPES.put("#loop", LoopCommand.class);
 		TYPES.put("#while", WhileCommand.class);
 		TYPES.put("#until", UntilCommand.class);
 		TYPES.put("#break", BreakCommand.class);
@@ -237,6 +239,11 @@ public abstract class Commands {
 		r = results.get(1);
 		String s = command.substring(r[0], r[1]);
 		if (!s.isEmpty() && s.charAt(0) == '#') {
+			String v = s.substring(1);
+			if (Strings.isNumber(v, false, false)) {
+				s = "#loop";
+				results.add(2, new int[] { 1, results.get(1)[1] });
+			}
 			Class<? extends Command> clz = TYPES.get(s);
 			if (clz == null) {
 				if (logger.isWarnEnabled()) {
