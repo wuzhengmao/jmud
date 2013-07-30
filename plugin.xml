@@ -104,6 +104,10 @@
                name="aboutImage"
                value="icons/alt_about.gif">
          </property>
+         <property
+               name="appName"
+               value="Java Mud Client">
+         </property>
       </product>
    </extension>
 
